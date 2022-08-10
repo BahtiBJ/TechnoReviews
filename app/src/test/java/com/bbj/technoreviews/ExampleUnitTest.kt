@@ -1,7 +1,5 @@
 package com.bbj.technoreviews
 
-import com.bbj.technoreviews.data.DNSParser
-import com.bbj.technoreviews.data.DNSParserAnotherTags
 import org.junit.Test
 
 import org.junit.Assert.*

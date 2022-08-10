@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdk 32
 
@@ -48,6 +50,10 @@ dependencies {
 
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
+
+    implementation 'com.arello-mobile:moxy:1.5.5'
+    kapt 'com.arello-mobile:moxy-compiler:1.5.5'
+    implementation 'tech.schoolhelper:moxy-x-androidx:1.7.0'
 
 
 }
