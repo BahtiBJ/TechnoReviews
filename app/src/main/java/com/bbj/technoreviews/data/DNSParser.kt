@@ -1,68 +1,93 @@
 package com.bbj.technoreviews.data
 
 import android.util.Log
-import com.bbj.technoreviews.Parser
 import com.bbj.technoreviews.data.modeks.Preview
-import com.bbj.technoreviews.data.modeks.ResultType
 import com.bbj.technoreviews.data.modeks.Review
+import com.bbj.technoreviews.domain.Parser
 import io.reactivex.rxjava3.core.ObservableEmitter
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-object DNSParser : Parser {
+class DNSParser : Parser {
 
     private val TAG = "DNSParser"
     private val baseUrl = "https://www.dns-shop.kz/search/?order=4&q="
 
-    private lateinit var preview : Preview
-    private val reviewList : ArrayList<Preview> = arrayListOf()
+    private lateinit var preview: Preview
+    private val reviewList: ArrayList<Preview> = arrayListOf()
 
-    private lateinit var emitter: ObservableEmitter<ResultType>
+    private var productList: Elements? = null
 
-    override fun getResult(searchRequest: String, emitter: ObservableEmitter<ResultType>) {
-        this.emitter = emitter
+    override fun getPreviewStream(
+        searchRequest: String,
+        previewEmitter: ObservableEmitter<Preview>
+    ) {
         try {
-            val document =
-                Jsoup.connect(baseUrl +
-                        searchRequest.apply {
-                            trim()
-                            replace(" ", "+")
-                        })
-                    //            .userAgent("Mozilla")
-                    //                .timeout(3000)
-                    .get()
-            Log.d(TAG, "get result")
-            val productList = document.select("div[data-id=\"product\"]")
-            preview = getPreview(productList[0])
-            emitter.onNext(preview)
-            Log.d(TAG, "preview getted")
-            getReviews(productList)
-            Log.d(TAG, "reviews getted")
+            productList = parseProductList(searchRequest)
+            Log.d(TAG, "get previews")
+            preview = getPreview(productList!![0])
+            previewEmitter.onNext(preview)
         } catch (e: Exception) {
-            emitter.onError(e)
+            previewEmitter.onError(e)
         }
-        emitter.onComplete()
     }
+
+    override fun getReviewStream(reviewListEmitter: ObservableEmitter<Review>) {
+        productList?.let {
+            try {
+                getReviews(it, reviewListEmitter)
+            } catch (e : Exception){
+                reviewListEmitter.onError(e)
+            }
+        }
+    }
+
+    private fun parseProductList(searchRequest: String): Elements {
+        val document =
+            Jsoup.connect(baseUrl +
+                    searchRequest.apply {
+                        trim()
+                        replace(" ", "+")
+                    })
+                //            .userAgent("Mozilla")
+                //                .timeout(3000)
+                .get()
+        Log.d(TAG, "get result")
+        return document.select("div[data-id=\"product\"]")
+
+    }
+
 
     private fun getPreview(element: Element): Preview {
         Log.d(TAG, "get preview")
         val previewImage = element.getElementsByTag("img").attr("data-src")
         val productName =
             element.select("a.catalog-product__name").text()
+        val ratingElement = element.select("a[data-rating]")
         val reviewCount =
             try {
                 element.select("a[data-rating]")
-                    .text().toInt()
-            } catch (e: ClassCastException) {
-                0
+                    .text().toInt().let {
+                        if (it == 0)
+                            return Preview(Shop.DNS,"","",404f)
+                    }
+            } catch (e: Exception) {
                 Log.d(TAG, "ClassCastException")
+                404
             }
-        return Preview(Shop.DNS, previewImage, productName, reviewCount)
+        val rating =
+            try {
+                ratingElement.attr("data-rating").toFloat()
+            } catch (e: Exception) {
+                Log.d(TAG, "ClassCastException")
+                0.0.toFloat()
+            }
+        return Preview(Shop.DNS, previewImage, productName, rating)
     }
 
     private fun getReviews(
-        elements: Elements,
+        elements: Elements, reviewListEmitter: ObservableEmitter<Review>
     ): ArrayList<Review> {
         Log.d(TAG, "get Reviews")
         val reviewList: ArrayList<Review> = arrayListOf()
@@ -72,7 +97,7 @@ object DNSParser : Parser {
                 try {
                     element.select("a[data-rating]")
                         .text().toInt()
-                } catch (e: ClassCastException) {
+                } catch (e: Exception) {
                     Log.d(TAG, "ClassCastException")
                     0
                 }
@@ -82,32 +107,38 @@ object DNSParser : Parser {
                 exemplars.add(Pair(reviewCount, url))
             }
         }
-        if (exemplars.size > 3) {
-            exemplars.sortByDescending { it.first }
-            exemplars = exemplars.subList(0, 3) as ArrayList<Pair<Int, String>>
-        }
-        for (exemplar in exemplars) {
-            getReviewsFromCurrentSite(exemplar.second)
+        if (exemplars.size > 0){
+            if (exemplars.size > 3) {
+                exemplars.sortByDescending { it.first }
+                exemplars = arrayListOf(exemplars[0], exemplars[1], exemplars[2])
+            }
+            for (exemplar in exemplars) {
+                getReviewsFromCurrentSite(exemplar.second, reviewListEmitter)
+            }
         }
         return reviewList
     }
 
-    private fun getReviewsFromCurrentSite(url: String) {
+    private fun getReviewsFromCurrentSite(
+        url: String,
+        reviewListEmitter: ObservableEmitter<Review>
+    ) {
         Log.d(TAG, "getReviewsFromCurrentSite $url")
         val reviewList: ArrayList<Review> = arrayListOf()
         val reviewDocument = Jsoup.connect("$url/opinion/").get()
         val reviewElements = reviewDocument.select("div.ow-opinion.ow-opinions__item")
         var starCount: Int
         var reviewText: String
-        var review : Review
-        for (reviewElement in reviewElements) {
+        var review: Review
+        for (reviewElement in reviewElements.subList(1,reviewElements.size)) {
             reviewText = reviewElement.select("div.ow-opinion__texts").text()
+            if (reviewText.trim().isEmpty())
+                continue
             starCount = getStarCount(reviewElement)
             review = Review(starCount, reviewText)
             reviewList.add(review)
-            emitter.onNext(review)
+            reviewListEmitter.onNext(review)
         }
-//        Log.d(TAG, "Review getted = ${reviewList.size}")
     }
 
     private fun getStarCount(element: Element): Int {

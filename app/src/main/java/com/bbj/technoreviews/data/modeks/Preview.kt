@@ -7,4 +7,4 @@ data class Preview (
     val shopName: Shop,
     val previewImageUrl: String,
     val productName : String,
-    val reviewCount : Int) : ResultType
+    val rating : Float) : ResultType

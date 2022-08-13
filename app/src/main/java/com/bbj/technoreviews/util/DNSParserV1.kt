@@ -1,7 +1,6 @@
 package com.bbj.technoreviews.util
 
 import android.util.Log
-import com.bbj.technoreviews.Parser
 import com.bbj.technoreviews.data.Shop
 import com.bbj.technoreviews.data.modeks.Preview
 import com.bbj.technoreviews.data.modeks.ResultStates
@@ -10,13 +9,13 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-object DNSParserV1 : Parser {
+object DNSParserV1  {
 
     private val TAG = "DNSParser"
 
     private val baseUrl = "https://www.dns-shop.kz/search/?order=4&q="
 
-    override fun getResult(searchRequest: String): ResultStates {
+    fun getResult(searchRequest: String): ResultStates {
         val document =
             Jsoup.connect(
                 baseUrl +
@@ -43,10 +42,10 @@ object DNSParserV1 : Parser {
         val reviewCount =
             try {
                 element.getElementsByClass("catalog-product__rating ui-link ui-link_black")
-                    .text().toInt()
+                    .text().toFloat()
             } catch (e: ClassCastException) {
-                0
                 Log.d(TAG, "ClassCastException")
+                0f
             }
         return Preview(Shop.DNS, previewImage, productName, reviewCount)
     }
@@ -66,7 +65,7 @@ object DNSParserV1 : Parser {
                 }
             Log.d(TAG, "review count = $reviewCount elements size = ${elements.size}")
             if (reviewCount > 0) {
-                val url = element.getElementsByClass("catalog-product__name ui-link ui-link_black")
+                url = element.getElementsByClass("catalog-product__name ui-link ui-link_black")
                     .attr("abs:href")
                 reviewList.addAll(getReviewsFromCurrentSite(url))
             }
