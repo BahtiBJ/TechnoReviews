@@ -1,9 +1,10 @@
 package com.bbj.technoreviews.view.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -13,23 +14,26 @@ import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.Scene
 import androidx.transition.Slide
-import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.arellomobile.mvp.presenter.PresenterType
 import com.bbj.technoreviews.R
-import com.bbj.technoreviews.data.modeks.Preview
+import com.bbj.technoreviews.data.modeks.Sample
 import com.bbj.technoreviews.data.modeks.ResultType
 import com.bbj.technoreviews.view.MainActivity
-import com.bbj.technoreviews.view.presenter.MainPresenter
-import com.bbj.technoreviews.view.presenter.MainViewState
-import com.bbj.technoreviews.view.adapter.PreviewListAdapter
+import com.bbj.technoreviews.view.adapter.SampleListAdapter
+import com.bbj.technoreviews.view.presenter.SampleFragmentPresenter
+import com.bbj.technoreviews.view.presenter.SampleView
 
-const val NAME_KEY = "NAME"
-const val ACTION_DONE_ID = 1
+class SampleFragment : MvpAppCompatFragment(), SampleView {
 
-class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
+    val NAME_KEY = "NAME"
+    val ACTION_DONE_ID = 1
+
+    init {
+        Log.d("ISINITFRAG","INIT PREVIEW")
+    }
 
     val TAG = "PREVIEWFRAGMENT"
 
@@ -58,8 +62,8 @@ class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
     }
 
     val adapter by lazy {
-        PreviewListAdapter(requireContext(),
-            object : PreviewListAdapter.OnProductClick {
+        SampleListAdapter(requireContext(),
+            object : SampleListAdapter.OnProductClick {
                 override fun click(productName: String) {
                     val bundle = Bundle().apply { putString(NAME_KEY, productName) }
                     (requireActivity() as MainActivity).goToReviewsFragment(bundle)
@@ -68,35 +72,24 @@ class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
     }
 
     @InjectPresenter(tag = "main", type = PresenterType.GLOBAL)
-    lateinit var presenter: MainPresenter
+    lateinit var presenter: SampleFragmentPresenter
 
     private var currentSearchRequest = ""
 
-    private lateinit var progressBar : ProgressBar
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_preview, container,false)
+        return inflater.inflate(R.layout.fragment_sample, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         progressBar = view.findViewById(R.id.progress_bar)
-
-        view.setFocusableInTouchMode(true)
-        view.requestFocus()
-        view.setOnKeyListener(object : View.OnKeyListener {
-            override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                return if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    TransitionManager.go(scene1, set)
-                    true
-                } else false
-            }
-        })
 
 //        val animatedBg: AnimationDrawable = sceneRoot.background as AnimationDrawable
 //        animatedBg.setEnterFadeDuration(2000);
@@ -116,16 +109,15 @@ class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
 //        }
 
         searchField.setOnEditorActionListener { v, actionId, keyEvent ->
-            Log.d(TAG,"Something pressed")
+            Log.d(TAG, "Something pressed")
             val searchRequest = searchField.text.toString()
             if (actionId == EditorInfo.IME_ACTION_GO && searchRequest != currentSearchRequest) {
                 currentSearchRequest = searchRequest
-                Log.d(TAG,"Enter pressed")
+                Log.d(TAG, "Enter pressed")
                 progressBar.visibility = View.VISIBLE
                 presenter.getObservablePreviews(searchRequest)
-                presenter.getObservableReviews()
                 true
-            }else false
+            } else false
         }
     }
 
@@ -135,8 +127,8 @@ class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
     }
 
     override fun addToList(result: ResultType) {
-        Log.d(TAG,"Add to List")
-        if (result is Preview)
+        Log.d(TAG, "Add to List")
+        if (result is Sample)
             adapter.addElement(result)
     }
 
@@ -145,6 +137,6 @@ class PreviewsFragment : MvpAppCompatFragment(), MainViewState {
     }
 
     override fun onComplete() {
-        progressBar.visibility = View.GONE
+       progressBar.visibility = View.GONE
     }
 }

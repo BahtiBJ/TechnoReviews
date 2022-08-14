@@ -2,7 +2,8 @@
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/shop_parent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
     android:background="@color/gray_light"
     android:orientation="vertical">
 
@@ -13,6 +14,7 @@
         android:elevation="5dp"
         android:clickable="true"
         android:focusable="true"
+        android:background="@color/white"
         android:orientation="vertical">
 
         <ImageView
@@ -28,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:background="@color/white"
+            android:background="#00FFFFFF"
             android:src="@drawable/arrow_down" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -39,7 +41,7 @@
 <!--        android:background="@color/divider" />-->
 
     <include
-        layout="@layout/product_card"
+        layout="@layout/sample_product_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"/>

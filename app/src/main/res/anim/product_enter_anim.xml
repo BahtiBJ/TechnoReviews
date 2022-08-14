@@ -5,7 +5,7 @@
     android:zAdjustment = "bottom">
 
     <translate
-        android:fromYDelta="-100%"
+        android:fromYDelta="-140%"
         android:toYDelta="0%p"/>
 
 </set>

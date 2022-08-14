@@ -3,7 +3,7 @@ package com.bbj.technoreviews.view
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.bbj.technoreviews.R
-import com.bbj.technoreviews.view.fragments.PreviewsFragment
+import com.bbj.technoreviews.view.fragments.SampleFragment
 import com.bbj.technoreviews.view.fragments.ReviewsListFragment
 
 
@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.main_fragment_container, PreviewsFragment())
+            .replace(R.id.main_fragment_container, SampleFragment())
             .addToBackStack("previews")
             .commit()
     }
@@ -28,7 +28,8 @@ class MainActivity : AppCompatActivity() {
                 R.anim.pop_enter_anim,
                 R.anim.pop_exit_anim
             )
-            .add(R.id.main_fragment_container, ReviewsListFragment::class.java, bundle)
+            .replace(R.id.main_fragment_container, ReviewsListFragment::class.java, bundle)
+            .addToBackStack("review")
             .commit()
     }
 

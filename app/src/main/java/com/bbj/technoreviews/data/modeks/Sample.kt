@@ -1,9 +1,8 @@
 package com.bbj.technoreviews.data.modeks
 
-import android.net.Uri
 import com.bbj.technoreviews.data.Shop
 
-data class Preview (
+data class Sample (
     val shopName: Shop,
     val previewImageUrl: String,
     val productName : String,

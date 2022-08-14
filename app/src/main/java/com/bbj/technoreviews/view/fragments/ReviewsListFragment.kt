@@ -10,18 +10,17 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
-import com.arellomobile.mvp.presenter.PresenterType
 import com.bbj.technoreviews.R
 import com.bbj.technoreviews.data.modeks.ResultType
 import com.bbj.technoreviews.data.modeks.Review
 import com.bbj.technoreviews.view.adapter.ReviewListAdapter
-import com.bbj.technoreviews.view.presenter.MainPresenter
-import com.bbj.technoreviews.view.presenter.MainViewState
+import com.bbj.technoreviews.view.presenter.ReviewFragmentPresenter
+import com.bbj.technoreviews.view.presenter.ReviewView
 
-class ReviewsListFragment : MvpAppCompatFragment(), MainViewState {
+class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
 
-    @InjectPresenter(tag = "main", type = PresenterType.GLOBAL)
-    lateinit var presenter: MainPresenter
+    @InjectPresenter
+    lateinit var presenter: ReviewFragmentPresenter
 
     private var productNameString = ""
         set(value) {

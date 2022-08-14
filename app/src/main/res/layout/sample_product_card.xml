@@ -4,7 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:foreground="?android:attr/selectableItemBackground"
-    android:visibility="invisible"
+    android:visibility="visible"
     android:clickable="true"
     android:focusable="true"
     app:cardElevation="4dp"

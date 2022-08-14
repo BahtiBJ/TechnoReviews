@@ -1,7 +1,7 @@
 package com.bbj.technoreviews.data
 
 import android.util.Log
-import com.bbj.technoreviews.data.modeks.Preview
+import com.bbj.technoreviews.data.modeks.Sample
 import com.bbj.technoreviews.data.modeks.Review
 import com.bbj.technoreviews.domain.Parser
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -14,22 +14,22 @@ class DNSParser : Parser {
     private val TAG = "DNSParser"
     private val baseUrl = "https://www.dns-shop.kz/search/?order=4&q="
 
-    private lateinit var preview: Preview
-    private val reviewList: ArrayList<Preview> = arrayListOf()
+    private lateinit var sample: Sample
+    private val reviewList: ArrayList<Sample> = arrayListOf()
 
     private var productList: Elements? = null
 
-    override fun getPreviewStream(
+    override fun getSampleStream(
         searchRequest: String,
-        previewEmitter: ObservableEmitter<Preview>
+        sampleEmitter: ObservableEmitter<Sample>
     ) {
         try {
             productList = parseProductList(searchRequest)
             Log.d(TAG, "get previews")
-            preview = getPreview(productList!![0])
-            previewEmitter.onNext(preview)
+            sample = getSample(productList!![0])
+            sampleEmitter.onNext(sample)
         } catch (e: Exception) {
-            previewEmitter.onError(e)
+            sampleEmitter.onError(e)
         }
     }
 
@@ -59,7 +59,7 @@ class DNSParser : Parser {
     }
 
 
-    private fun getPreview(element: Element): Preview {
+    private fun getSample(element: Element): Sample {
         Log.d(TAG, "get preview")
         val previewImage = element.getElementsByTag("img").attr("data-src")
         val productName =
@@ -70,7 +70,7 @@ class DNSParser : Parser {
                 element.select("a[data-rating]")
                     .text().toInt().let {
                         if (it == 0)
-                            return Preview(Shop.DNS,"","",404f)
+                            return Sample(Shop.DNS,"","",404f)
                     }
             } catch (e: Exception) {
                 Log.d(TAG, "ClassCastException")
@@ -83,7 +83,7 @@ class DNSParser : Parser {
                 Log.d(TAG, "ClassCastException")
                 0.0.toFloat()
             }
-        return Preview(Shop.DNS, previewImage, productName, rating)
+        return Sample(Shop.DNS, previewImage, productName, rating)
     }
 
     private fun getReviews(
