@@ -8,6 +8,6 @@ interface Parser {
 
     fun getSampleStream(searchRequest : String, sampleEmitter: ObservableEmitter<Sample>)
 
-    fun getReviewStream(reviewListEmitter: ObservableEmitter<Review>)
+    fun getReviewStream(position: Int, reviewListEmitter: ObservableEmitter<Review>)
 
 }

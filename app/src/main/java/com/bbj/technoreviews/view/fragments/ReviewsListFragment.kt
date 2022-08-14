@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.bbj.technoreviews.R
-import com.bbj.technoreviews.data.modeks.ResultType
+import com.bbj.technoreviews.data.Shop
 import com.bbj.technoreviews.data.modeks.Review
 import com.bbj.technoreviews.view.adapter.ReviewListAdapter
 import com.bbj.technoreviews.view.presenter.ReviewFragmentPresenter
@@ -29,22 +29,30 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
             } else
                 value
         }
+    private var position : Int = 0
+    private lateinit var shopName : Shop
+
+    lateinit var progressBar: ProgressBar
 
     val adapter: ReviewListAdapter by lazy { ReviewListAdapter(requireContext()) }
-    lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        productNameString = arguments?.getString("NAME") ?: "Какой-то продукт"
+        arguments?.let {
+            position = it.getInt(SampleFragment.POSITION)
+            productNameString = it.getString(SampleFragment.NAME_KEY,"") ?: "Какой-то продукт"
+           shopName = Shop.valueOf(it.getString(SampleFragment.SHOP) ?: "ALL")
+        }
+
         return inflater.inflate(R.layout.fragment_review, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        presenter.getObservableReviews()
+        presenter.getObservableReviews(position, shopName)
 
         progressBar = view.findViewById(R.id.review_fragment_progress_bar)
         progressBar.visibility = View.VISIBLE
@@ -58,9 +66,8 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
         adapter.clearElements()
     }
 
-    override fun addToList(result: ResultType) {
-        if (result is Review)
-            adapter.addElement(result)
+    override fun addToList(review: Review) {
+            adapter.addElement(review)
     }
 
     override fun showError(error: String) {

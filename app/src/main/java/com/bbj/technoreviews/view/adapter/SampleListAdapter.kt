@@ -23,7 +23,11 @@ import com.bbj.technoreviews.R
 import com.bbj.technoreviews.data.Shop
 import com.bbj.technoreviews.data.modeks.Sample
 import com.squareup.picasso.Picasso
-import kotlin.collections.ArrayList
+
+const val DNS = 0
+const val BELIY_VETER = 1
+const val MECHTA = 2
+const val ALSER = 3
 
 class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
     RecyclerView.Adapter<SampleListAdapter.ViewHolder>() {
@@ -48,45 +52,46 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
     }
 
     interface OnProductClick {
-        fun click(productName: String)
+        fun click(productName: String, shop : Shop, position : Int)
     }
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = inflater.inflate(R.layout.sample_list_item, parent, false)
-        (view.findViewById<ViewGroup>(R.id.shop_parent)).getLayoutTransition().enableTransitionType(LayoutTransition.CHANGING)
+        val view = inflater.inflate(R.layout.sample_inner_product_list_item, parent, false)
+//        (view.findViewById<ViewGroup>(R.id.shop_parent)).getLayoutTransition()
+//            .enableTransitionType(LayoutTransition.CHANGING)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, @SuppressLint("RecyclerView") position: Int) {
-        if (samplesList[position].rating.toInt() != 404) {
-            holder.run {
-                samplesList[position].let { item ->
-                    Handler(Looper.getMainLooper()).postDelayed({ productCard.visibility = View.GONE },50)
-                    shopIcon.setImageDrawable(selectShopImage(item.shopName))
-                    productCard.apply {
-                        setOnTouchListener(object : View.OnTouchListener {
-                            override fun onTouch(view: View?, event: MotionEvent?): Boolean {
-                                when (event?.action) {
-                                    MotionEvent.ACTION_UP -> {
-                                        onProductClick.click(samplesList[position].productName)
-                                        view?.performClick()
-                                    }
+        holder.run {
+            samplesList[position].let { item ->
+                productCard.apply {
+                    setOnTouchListener(object : View.OnTouchListener {
+                        override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+                            when (event?.action) {
+                                MotionEvent.ACTION_UP -> {
+                                    onProductClick.click(item.productName,
+                                    item.shopName,
+                                    position)
+                                    view?.performClick()
                                 }
-                                return true
                             }
-                        })
-                    }
-
-                    productName.text = item.productName
-                    productRating.setRating(item.rating)
-
-                    Picasso.get()
-                        .load(item.previewImageUrl)
-                        .placeholder(R.drawable.place_holder)
-                        .error(R.drawable.error)
-                        .fit()
-                        .into(productImage)
+                            return true
+                        }
+                    })
                 }
+
+                productName.text = item.productName
+                productRating.setRating(item.rating)
+                productReviewCount.text = "(${item.reviewCount})"
+
+                Picasso.get()
+                    .load(item.previewImageUrl)
+                    .placeholder(R.drawable.place_holder)
+                    .error(R.drawable.error)
+                    .fit()
+                    .into(productImage)
             }
         }
     }
@@ -95,82 +100,12 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
         return samplesList.size
     }
 
-    private fun selectShopImage(shop: Shop): Drawable {
-        return when (shop) {
-            Shop.DNS -> logoArray[0]
-            Shop.ALSER -> TODO()
-            Shop.BELIY_VETER -> TODO()
-            Shop.MECHTA -> TODO()
-        }
-    }
-
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val shopArea = itemView.findViewById<LinearLayoutCompat>(R.id.shop_area).apply {
-            setOnTouchListener(object : View.OnTouchListener {
-                override fun onTouch(view: View?, event: MotionEvent?): Boolean {
-                    when (event?.action) {
-                        MotionEvent.ACTION_UP -> {
-                            onClick(view)
-                            view?.performClick()
-                        }
-                    }
-                    return true
-                }
-            })
-        }
-
-        val shopIcon = itemView.findViewById<ImageView>(R.id.shop_icon)
-        val shopShowButton = itemView.findViewById<ImageView>(R.id.shop_arrow_button)
-
         val productCard = itemView.findViewById<CardView>(R.id.product_card)
         val productImage = itemView.findViewById<ImageView>(R.id.product_image)
         val productName = itemView.findViewById<TextView>(R.id.product_name)
         val productRating = itemView.findViewById<RatingBar>(R.id.rating)
-
-        fun onClick(view: View?) {
-            Log.d("ADAPTER", "On click")
-            if (productCard.visibility != View.VISIBLE) {
-                Log.d("ADAPTER", "Gone")
-                shopShowButton
-                    .animate().rotationBy(180f).apply {
-                        duration = 300
-                        interpolator = AccelerateInterpolator()
-                        start()
-                    }
-                productCard.translationY = -400f
-                productCard.visibility = View.VISIBLE
-                productCard.animate().apply {
-                    duration = 300
-                    translationY(0f)
-                    interpolator = AccelerateInterpolator()
-                }.setListener(object : Animator.AnimatorListener{
-                    override fun onAnimationStart(p0: Animator?) {
-                        shopArea.isEnabled = false
-                    }
-
-                    override fun onAnimationEnd(p0: Animator?) {
-                        shopArea.isEnabled = true
-                    }
-                    override fun onAnimationCancel(p0: Animator?) {}
-                    override fun onAnimationRepeat(p0: Animator?) { }
-                }).start()
-                productCard.visibility = View.VISIBLE
-            } else {
-                Log.d("ADAPTER", "Visble")
-                shopShowButton
-                    .animate().rotationBy(180f).apply {
-                        duration = 300
-                        interpolator = AccelerateInterpolator()
-                        start()
-                    }
-                productCard.animate().apply {
-                    duration = 300
-                    translationY(-400f)
-                    interpolator = AccelerateInterpolator()
-                }.start()
-                Handler(Looper.getMainLooper()).postDelayed({productCard.visibility = View.GONE},300)
-            }
-        }
+        val productReviewCount = itemView.findViewById<TextView>(R.id.product_review_count)
     }
 
 }

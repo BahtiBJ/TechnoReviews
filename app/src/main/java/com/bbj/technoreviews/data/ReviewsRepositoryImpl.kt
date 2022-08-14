@@ -20,10 +20,16 @@ object ReviewsRepositoryImpl : ReviewsRepository {
         })
     }
 
-    override fun getReviewList(): Observable<Review> {
+    override fun getReviewList(position : Int, shopName : Shop): Observable<Review> {
         return Observable.create(object : ObservableOnSubscribe<Review> {
             override fun subscribe(emitter: ObservableEmitter<Review>) {
-                DNSPArser.getReviewStream(emitter)
+                when (shopName){
+                    Shop.DNS -> DNSPArser.getReviewStream(position,emitter)
+                    Shop.BELIY_VETER -> TODO()
+                    Shop.MECHTA -> TODO()
+                    Shop.ALSER -> TODO()
+                    else -> error("Unknown shop name")
+                }
                 emitter.onComplete()
             }
         })

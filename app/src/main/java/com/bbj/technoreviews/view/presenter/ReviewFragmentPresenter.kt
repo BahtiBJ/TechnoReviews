@@ -4,6 +4,7 @@ import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
 import com.bbj.technoreviews.data.ReviewsRepositoryImpl
+import com.bbj.technoreviews.data.Shop
 import com.bbj.technoreviews.data.modeks.Review
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observer
@@ -15,13 +16,16 @@ class ReviewFragmentPresenter : MvpPresenter<ReviewView>() {
 
     val TAG = "PRESENTER"
 
-    fun getObservableReviews() {
+    private val savedReviews = hashMapOf<Int,Review>()
+
+    fun getObservableReviews(position : Int,shopName : Shop) {
         Log.d(TAG, "get observable review")
-        ReviewsRepositoryImpl.getReviewList()
+        ReviewsRepositoryImpl.getReviewList(position,shopName)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Review> {
                 override fun onSubscribe(d: Disposable) {
+                    savedReviews.clear()
                     viewState.onNewSubscribe()
                 }
 
@@ -30,7 +34,7 @@ class ReviewFragmentPresenter : MvpPresenter<ReviewView>() {
                 }
 
                 override fun onError(e: Throwable) {
-                    viewState.showError(e.localizedMessage)
+                    viewState.showError(e.localizedMessage!!)
                     throw e
 
                 }

@@ -3,6 +3,7 @@ package com.bbj.technoreviews.view.presenter
 import com.arellomobile.mvp.MvpView
 import com.arellomobile.mvp.viewstate.strategy.*
 import com.bbj.technoreviews.data.modeks.ResultType
+import com.bbj.technoreviews.data.modeks.Sample
 import io.reactivex.rxjava3.core.Observable
 
 interface SampleView : MvpView {
@@ -11,7 +12,7 @@ interface SampleView : MvpView {
     fun onNewSubscribe()
 
 //    @StateStrategyType(OneExecutionStateStrategy::class)
-    fun addToList(result : ResultType)
+    fun addToList(sample : Sample)
 
     @StateStrategyType(SkipStrategy::class)
     fun showError(error : String)
