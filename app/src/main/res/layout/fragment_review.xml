@@ -4,23 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray_light"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:background="@color/yellow_light"
     android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/review_product_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="15sp"
-        android:text="Проводная гарнитура Vivo HP203..."
-        android:textColor="@color/black"
-        android:textSize="20sp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/divider" />
 
     <FrameLayout
         android:layout_width="match_parent"

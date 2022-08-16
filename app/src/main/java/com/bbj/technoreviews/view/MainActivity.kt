@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.main_fragment_container, SampleFragment())
+            .add(R.id.main_fragment_container, SampleFragment())
             .addToBackStack("previews")
             .commit()
     }
@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
                 R.anim.pop_enter_anim,
                 R.anim.pop_exit_anim
             )
-            .replace(R.id.main_fragment_container, ReviewsListFragment::class.java, bundle)
+            .add(R.id.main_fragment_container, ReviewsListFragment::class.java, bundle)
             .addToBackStack("review")
             .commit()
     }

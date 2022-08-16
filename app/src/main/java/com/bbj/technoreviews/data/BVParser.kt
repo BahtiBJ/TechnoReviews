@@ -9,10 +9,10 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class DNSParser : Parser {
+class BVParser : Parser {
 
-    private val TAG = "DNSParser"
-    private val baseUrl = "https://www.dns-shop.kz/search/?order=4&q="
+    private val TAG = "BVParser"
+    private val baseUrl = "https://shop.kz/search/?q="
 
     private lateinit var sample: Sample
     private val reviewMap = hashMapOf<Int, ArrayList<Review>>()
@@ -60,52 +60,24 @@ class DNSParser : Parser {
             Jsoup.connect(baseUrl +
                     searchRequest.apply {
                         trim()
-                        replace(" ", "+")
+                        replace(" ", "%20")
                     })
-              .timeout(30000)
+                .timeout(30000)
                 .get()
         Log.d(TAG, "get result")
-        val parsedElements = document.select("div[data-id=\"product\"]")
-        val result = Elements()
-        for (element in parsedElements) {
-            if (haveReviews(element))
-                result.add(element)
-        }
-        return result
+        val parsedElements = document.select("div.multisearch-page__product gtm-impression-product")
+        return parsedElements
 
     }
-
-    private fun haveReviews(element: Element): Boolean {
-        val ratingElement = element.select("a[data-rating]")
-        try {
-            ratingElement
-                .text().toInt().let {
-                    if (it == 0)
-                        return false
-                }
-        } catch (e: Exception) {
-            Log.d(TAG, "ClassCastException")
-            return false
-        }
-        return true
-    }
-
 
     private fun getSample(element: Element): Sample {
         Log.d(TAG, "get preview")
         val previewImage = element.getElementsByTag("img").attr("data-src")
         val productName =
-            element.select("a.catalog-product__name").text()
-        val ratingElement = element.select("a[data-rating]")
-        val reviewCount = ratingElement.text().toInt()
-        val rating =
-            try {
-                ratingElement.attr("data-rating").toFloat()
-            } catch (e: Exception) {
-                Log.d(TAG, "ClassCastException")
-                0.0.toFloat()
-            }
-        return Sample(Shop.DNS, previewImage, productName, rating, reviewCount)
+            element.select("a[href]").text()
+        val reviewCount = 0
+        val rating = 0.0f
+        return Sample(Shop.BELIY_VETER, previewImage, productName, rating, reviewCount)
     }
 
 
@@ -117,18 +89,15 @@ class DNSParser : Parser {
             .attr("abs:href")
         Log.d(TAG, "getReviewsFromCurrentSite $url")
         val reviewList: ArrayList<Review> = arrayListOf()
-        val reviewDocument = Jsoup.connect("$url/opinion/").get()
-        val reviewElements = reviewDocument.select("div.ow-opinion.ow-opinions__item")
+        val reviewDocument = Jsoup.connect("$url").get()
+        val reviewElements = reviewDocument.select("div.bx_review_item")
         var starCount: Int
         var reviewText: String
         var review: Review
-        for (reviewElement in reviewElements.subList(1, reviewElements.size)) {
-            reviewText = reviewElement.select("div.ow-opinion__texts").text().apply {
-                replace("Достоинства:".toRegex(),"\nДостоинства:")
-                replace("Недостатки:".toRegex(),"\nНедостатки:")
-                replace("Комментарии:".toRegex(),"\nКомментарий:")
-            }
-            starCount = getStarCount(reviewElement)
+        //.subList(1, reviewElements.size
+        for (reviewElement in reviewElements) {
+            reviewText = getText(reviewElement)
+            starCount = 5 -  element.select("a.fa fa-star-o").size
             review = Review(starCount, reviewText)
             reviewList.add(review)
             reviewListEmitter.onNext(review)
@@ -136,23 +105,13 @@ class DNSParser : Parser {
         return reviewList
     }
 
-    private fun getStarCount(element: Element): Int {
-        val stars = element.select("span[data-state]")
-        var count = 0
-        var starCount = 0
-        for (star in stars) {
-            count++
-            val state = star.attr("data-state").toString()
-            Log.d(TAG, "star state = ${state} stars size = ${stars.size}")
-            if (state.contains("s"))
-                starCount++
-            if (count >= 5) {
-                Log.d(TAG, "Star count = $starCount")
-                return starCount
-            }
+    private fun getText(element: Element) : String{
+        val paragraphs = element.select("div.bx_review_text_i")
+        var reviewText = ""
+        for (paragraph in paragraphs){
+            reviewText += paragraph.text() + "\n"
         }
-        return starCount
+        return reviewText
     }
-
 
 }

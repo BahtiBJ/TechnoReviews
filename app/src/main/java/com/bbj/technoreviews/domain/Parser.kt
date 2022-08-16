@@ -1,7 +1,7 @@
 package com.bbj.technoreviews.domain
 
-import com.bbj.technoreviews.data.modeks.Sample
-import com.bbj.technoreviews.data.modeks.Review
+import com.bbj.technoreviews.data.models.Sample
+import com.bbj.technoreviews.data.models.Review
 import io.reactivex.rxjava3.core.ObservableEmitter
 
 interface Parser {

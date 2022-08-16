@@ -4,7 +4,7 @@ import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
 import com.bbj.technoreviews.data.ReviewsRepositoryImpl
-import com.bbj.technoreviews.data.modeks.Sample
+import com.bbj.technoreviews.data.models.Sample
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable

@@ -1,39 +1,25 @@
 package com.bbj.technoreviews.view.adapter
 
-import android.animation.Animator
-import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.Drawable
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
-import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.bbj.technoreviews.R
 import com.bbj.technoreviews.data.Shop
-import com.bbj.technoreviews.data.modeks.Sample
+import com.bbj.technoreviews.data.models.Sample
 import com.squareup.picasso.Picasso
-
-const val DNS = 0
-const val BELIY_VETER = 1
-const val MECHTA = 2
-const val ALSER = 3
 
 class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
     RecyclerView.Adapter<SampleListAdapter.ViewHolder>() {
 
-    val inflater = LayoutInflater.from(context)
-    val logoArray = arrayListOf<Drawable>(context.resources.getDrawable(R.drawable.dns_logo, null))
+    private val inflater = LayoutInflater.from(context)
     private var samplesList = arrayListOf<Sample>()
 
     fun addElement(sample: Sample) {
@@ -55,11 +41,8 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
         fun click(productName: String, shop : Shop, position : Int)
     }
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = inflater.inflate(R.layout.sample_inner_product_list_item, parent, false)
-//        (view.findViewById<ViewGroup>(R.id.shop_parent)).getLayoutTransition()
-//            .enableTransitionType(LayoutTransition.CHANGING)
         return ViewHolder(view)
     }
 

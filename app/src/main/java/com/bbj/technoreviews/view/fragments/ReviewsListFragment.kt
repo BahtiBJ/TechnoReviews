@@ -12,7 +12,7 @@ import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.bbj.technoreviews.R
 import com.bbj.technoreviews.data.Shop
-import com.bbj.technoreviews.data.modeks.Review
+import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.view.adapter.ReviewListAdapter
 import com.bbj.technoreviews.view.presenter.ReviewFragmentPresenter
 import com.bbj.technoreviews.view.presenter.ReviewView
@@ -22,13 +22,6 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     @InjectPresenter
     lateinit var presenter: ReviewFragmentPresenter
 
-    private var productNameString = ""
-        set(value) {
-            field = if (value.length > 30) {
-                value.removeRange(30, value.length) + "..."
-            } else
-                value
-        }
     private var position : Int = 0
     private lateinit var shopName : Shop
 
@@ -43,7 +36,6 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     ): View? {
         arguments?.let {
             position = it.getInt(SampleFragment.POSITION)
-            productNameString = it.getString(SampleFragment.NAME_KEY,"") ?: "Какой-то продукт"
            shopName = Shop.valueOf(it.getString(SampleFragment.SHOP) ?: "ALL")
         }
 
@@ -56,8 +48,6 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
 
         progressBar = view.findViewById(R.id.review_fragment_progress_bar)
         progressBar.visibility = View.VISIBLE
-        val productName: TextView = view.findViewById(R.id.review_product_name)
-        productName.text = productNameString
         val reviewList: RecyclerView = view.findViewById(R.id.review_list)
         reviewList.adapter = adapter
     }

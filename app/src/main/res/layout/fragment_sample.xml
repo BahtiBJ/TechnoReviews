@@ -5,8 +5,7 @@
     android:id="@+id/viewRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:gravity="center"
+    android:background="@color/gray_light"
     android:orientation="vertical">
 
     <EditText
@@ -25,33 +24,34 @@
         android:maxLines="1"
         android:paddingStart="10dp"
         android:paddingEnd="4dp"
+        android:scaleX="0.9"
+        android:scaleY="0.9"
         android:textColor="@color/black"
         android:textColorHint="@color/gray"
         android:textSize="20sp" />
 
 
     <ScrollView
-        android:paddingStart="15dp"
-        android:paddingEnd="15dp"
+        android:id="@+id/sample_scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:visibility="gone">
 
         <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/sample_list_root"
             android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
             android:nestedScrollingEnabled="false"
-            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/dns_shop_area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:clickable="true"
-                android:elevation="5dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:visibility="gone">
+                style="@style/ShopNameArea">
+
+                <View style="@style/Divider" />
 
                 <ImageView
                     android:layout_width="match_parent"
@@ -62,133 +62,98 @@
 
                 <ImageView
                     android:id="@+id/dns_shop_show"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:background="#00FFFFFF"
-                    android:src="@drawable/arrow_down" />
+                    style="@style/ArrowDownImage" />
+
+                <View style="@style/Divider" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/dns_preview_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/gray_light"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone"
+                style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
+
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/bv_shop_area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:clickable="true"
-                android:elevation="5dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:visibility="gone">
+                style="@style/ShopNameArea">
+
+                <View style="@style/Divider" />
 
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@color/white"
-                    android:src="@drawable/dns_logo" />
+                    android:src="@drawable/bv_logo" />
 
                 <ImageView
                     android:id="@+id/bv_shop_show"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:background="#00FFFFFF"
-                    android:src="@drawable/arrow_down" />
+                    style="@style/ArrowDownImage" />
+
+                <View style="@style/Divider" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/bv_preview_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/gray_light"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone"
+                style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/mechta_shop_area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:clickable="true"
-                android:elevation="5dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:visibility="gone">
+                style="@style/ShopNameArea">
+
+                <View style="@style/Divider" />
 
                 <ImageView
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="35dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@color/white"
-                    android:src="@drawable/dns_logo" />
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/mechta_logo" />
 
                 <ImageView
                     android:id="@+id/mechta_shop_show"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:background="#00FFFFFF"
-                    android:src="@drawable/arrow_down" />
+                    style="@style/ArrowDownImage" />
+
+                <View style="@style/Divider" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/mechta_preview_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/gray_light"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone"
+                style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/alser_shop_area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:clickable="true"
-                android:elevation="5dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:visibility="gone">
+                style="@style/ShopNameArea">
+
+                <View style="@style/Divider" />
 
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@color/white"
-                    android:src="@drawable/dns_logo" />
+                    android:src="@drawable/alser_logo" />
 
                 <ImageView
                     android:id="@+id/alser_shop_show"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:background="#00FFFFFF"
-                    android:src="@drawable/arrow_down" />
+                    style="@style/ArrowDownImage"/>
+
+                <View style="@style/Divider" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/alser_preview_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/gray_light"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone"
+                style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
+
+            <View style="@style/Divider" />
 
             <ProgressBar
                 android:id="@+id/progress_bar"
@@ -196,7 +161,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="25dp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/emptyResult"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="150dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/empty_result"
                 android:visibility="gone" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </ScrollView>

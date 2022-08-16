@@ -17,4 +17,39 @@
         <item name="colorControlNormal">@color/star</item>
         <item name="colorControlActivated">@color/star</item>
     </style>
+
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:background">@color/divider</item>
+    </style>
+
+    <style name="ShopNameArea">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/white</item>
+        <item name="android:clickable">true</item>
+        <item name="android:elevation">5dp</item>
+        <item name="android:focusable">true</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="ArrowDownImage">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:background">#00FFFFFF</item>
+        <item name="android:src">@drawable/arrow_down</item>
+    </style>
+
+    <style name="ProductList">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/gray_light</item>
+        <item name="android:nestedScrollingEnabled">false</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
 </resources>

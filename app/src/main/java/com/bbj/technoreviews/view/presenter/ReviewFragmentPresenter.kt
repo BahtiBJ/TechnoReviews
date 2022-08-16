@@ -5,7 +5,7 @@ import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
 import com.bbj.technoreviews.data.ReviewsRepositoryImpl
 import com.bbj.technoreviews.data.Shop
-import com.bbj.technoreviews.data.modeks.Review
+import com.bbj.technoreviews.data.models.Review
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable

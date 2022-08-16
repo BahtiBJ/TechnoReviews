@@ -8,7 +8,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bbj.technoreviews.R
-import com.bbj.technoreviews.data.modeks.Review
+import com.bbj.technoreviews.data.models.Review
 
 class ReviewListAdapter(context :Context) : RecyclerView.Adapter<ReviewListAdapter.ViewHolder>() {
 
