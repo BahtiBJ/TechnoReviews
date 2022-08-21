@@ -38,7 +38,7 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
     }
 
     interface OnProductClick {
-        fun click(productName: String, shop : Shop, position : Int)
+        fun click(productName: String, shop: Shop, position: Int)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -54,9 +54,11 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
                         override fun onTouch(view: View?, event: MotionEvent?): Boolean {
                             when (event?.action) {
                                 MotionEvent.ACTION_UP -> {
-                                    onProductClick.click(item.productName,
-                                    item.shopName,
-                                    position)
+                                    onProductClick.click(
+                                        item.productName,
+                                        item.shopName,
+                                        position
+                                    )
                                     view?.performClick()
                                 }
                             }
@@ -69,12 +71,21 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
                 productRating.setRating(item.rating)
                 productReviewCount.text = "(${item.reviewCount})"
 
-                Picasso.get()
-                    .load(item.previewImageUrl)
-                    .placeholder(R.drawable.place_holder)
-                    .error(R.drawable.error)
-                    .fit()
-                    .into(productImage)
+
+                if (item.previewImageUrl.isEmpty()) {
+                    Picasso.get()
+                        .load(R.drawable.place_holder)
+                        .placeholder(R.drawable.place_holder)
+                        .fit()
+                        .into(productImage)
+                } else {
+                    Picasso.get()
+                        .load(item.previewImageUrl)
+                        .placeholder(R.drawable.place_holder)
+                        .error(R.drawable.error)
+                        .fit()
+                        .into(productImage)
+                }
             }
         }
     }

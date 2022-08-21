@@ -9,12 +9,11 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class DNSParser : Parser {
+class KaspiParser : Parser {
 
-    private val TAG = "DNSParser"
-    private val baseUrl = "https://www.dns-shop.kz/search/?order=4&q="
+    private val TAG = "KaspiParser"
+    private val baseUrl = "https://kaspi.kz/shop/search/?text="
 
-    private lateinit var sample: Sample
     private val reviewMap = hashMapOf<Int, ArrayList<Review>>()
 
     private var productList: Elements? = null
@@ -31,11 +30,15 @@ class DNSParser : Parser {
         }
         try {
             productList = parseProductList(searchRequest)
-            Log.d(TAG, "get previews")
+            Log.d(TAG, "get previews productList size = ${productList!!.size}")
             for (i in 0 until productList!!.size) {
-                sampleEmitter.onNext(getSample(productList!![i]))
+                getSample(productList!![i]).let {
+                    Log.d(TAG,"Sample = $it")
+                    sampleEmitter.onNext(it)
+                }
             }
         } catch (e: Exception) {
+            Log.d(TAG,"On sample error")
             sampleEmitter.onError(e)
         }
     }
@@ -63,12 +66,11 @@ class DNSParser : Parser {
                 baseUrl +
                         searchRequest
                             .trim()
-                            .replace(" ", "+")
+                            .replace(" ", "%20")
             )
-//              .timeout(30000)
                 .get()
         Log.d(TAG, "get result")
-        val parsedElements = document.select("div[data-id=\"product\"]")
+        val parsedElements = document.select("div[data-product-id]")
         val result = Elements()
         for (element in parsedElements) {
             if (haveReviews(element))
@@ -79,10 +81,12 @@ class DNSParser : Parser {
     }
 
     private fun haveReviews(element: Element): Boolean {
-        val ratingElement = element.select("a[data-rating]")
+        val ratingElement = element.select("div.item-card__rating")
         try {
-            ratingElement
-                .text().toInt().let {
+            ratingElement.select("span.rating")
+                .attr("class")
+                .filter { it.isDigit() }
+                .toInt().let {
                     if (it == 0)
                         return false
                 }
@@ -96,19 +100,26 @@ class DNSParser : Parser {
 
     private fun getSample(element: Element): Sample {
         Log.d(TAG, "get preview")
-        val previewImage = element.getElementsByTag("img").attr("data-src")
+        val previewImage = element.select("img.item-card__image").attr("src")
         val productName =
-            element.select("a.catalog-product__name").text()
-        val ratingElement = element.select("a[data-rating]")
-        val reviewCount = ratingElement.text().toInt()
+            element.select("a[title]").attr("title")
+        val ratingElement = element.select("div.item-card__rating")
+        val reviewCount = ratingElement
+            .select("a[href]")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
         val rating =
             try {
-                ratingElement.attr("data-rating").toFloat()
+                ratingElement.select("span.rating")
+                    .attr("class")
+                    .filter { it.isDigit() }
+                    .toFloat()/2
             } catch (e: Exception) {
                 Log.d(TAG, "ClassCastException")
                 0.0.toFloat()
             }
-        return Sample(Shop.DNS, previewImage, productName, rating, reviewCount)
+        return Sample(Shop.KASPI, previewImage, productName, rating, reviewCount)
     }
 
 
@@ -120,41 +131,27 @@ class DNSParser : Parser {
             .attr("abs:href")
         Log.d(TAG, "getReviewsFromCurrentSite $url")
         val reviewList: ArrayList<Review> = arrayListOf()
-        val reviewDocument = Jsoup.connect("$url/opinion/").get()
-        val reviewElements = reviewDocument.select("div.ow-opinion.ow-opinions__item")
-        var starCount: Int
-        var reviewText: String
-        var review: Review
-        for (reviewElement in reviewElements.subList(1, reviewElements.size)) {
-            reviewText = reviewElement.select("div.ow-opinion__texts").text()
-                .replace("Недостатки", "\n\nНедостатки")
-                .replace("Комментарии", "\n\nКомментарий")
+        val reviewDocument = Jsoup.connect("$url").get()
+        val reviewElements = reviewDocument.select("div.reviews__review")
+        if (reviewElements.size != 0) {
+            var starCount: Int
+            var reviewText: String
+            var review: Review
+            for (reviewElement in reviewElements.subList(1, reviewElements.size)) {
+                reviewText = reviewElement.select("div.reviews__review-text").text()
+                    .replace("Недостатки", "\n\nНедостатки")
+                    .replace("Комментарии", "\n\nКомментарий")
 
-            starCount = getStarCount(reviewElement)
-            review = Review(starCount, reviewText)
-            reviewList.add(review)
-            reviewListEmitter.onNext(review)
+                starCount = reviewElement
+                    .select("div.rating")
+                    .attr("class")
+                    .filter { it.isDigit() }
+                    .toInt() / 2
+                review = Review(starCount, reviewText)
+                reviewList.add(review)
+                reviewListEmitter.onNext(review)
+            }
         }
         return reviewList
     }
-
-    private fun getStarCount(element: Element): Int {
-        val stars = element.select("span[data-state]")
-        var count = 0
-        var starCount = 0
-        for (star in stars) {
-            count++
-            val state = star.attr("data-state").toString()
-            Log.d(TAG, "star state = ${state} stars size = ${stars.size}")
-            if (state.contains("s"))
-                starCount++
-            if (count >= 5) {
-                Log.d(TAG, "Star count = $starCount")
-                return starCount
-            }
-        }
-        return starCount
-    }
-
-
 }

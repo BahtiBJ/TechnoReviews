@@ -1,8 +1,12 @@
 package com.bbj.technoreviews.view.fragments
 
-import android.animation.Animator
+import android.animation.ArgbEvaluator
 import android.animation.LayoutTransition
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,14 +15,10 @@ import android.view.*
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AnticipateOvershootInterpolator
 import android.view.inputmethod.EditorInfo
-import android.widget.ImageView
-import android.widget.ProgressBar
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import androidx.transition.ChangeBounds
-import androidx.transition.ChangeTransform
-import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
+import androidx.transition.*
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.arellomobile.mvp.presenter.PresenterType
@@ -30,6 +30,7 @@ import com.bbj.technoreviews.view.MainActivity
 import com.bbj.technoreviews.view.adapter.SampleListAdapter
 import com.bbj.technoreviews.view.presenter.SampleFragmentPresenter
 import com.bbj.technoreviews.view.presenter.SampleView
+
 
 const val transitionDuration: Long = 500
 const val productListTranslation = 1900f
@@ -48,7 +49,8 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
 
     val TAG = "PREVIEWFRAGMENT"
 
-    private var isEditTextOnTop = false
+    private var isSearchFieldOnTop = false
+    private var isResultEmpty = false
 
     lateinit var binding: FragmentSampleBinding
 
@@ -64,18 +66,15 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     }
 
     val DNSadapter by lazy { SampleListAdapter(requireContext(), onProductClick) }
+    val kaspiAdapter by lazy { SampleListAdapter(requireContext(), onProductClick) }
     val BVAdapter by lazy { SampleListAdapter(requireContext(), onProductClick) }
-    val alserAdapter by lazy { SampleListAdapter(requireContext(), onProductClick) }
-    val mechtaAdapter by lazy { SampleListAdapter(requireContext(), onProductClick) }
 
     @InjectPresenter(tag = "main", type = PresenterType.GLOBAL)
     lateinit var presenter: SampleFragmentPresenter
 
     private var currentSearchRequest = ""
 
-    private lateinit var progressBar: ProgressBar
-
-    private val translateOnTop = TransitionSet().apply {
+    private val translateOnTopSet = TransitionSet().apply {
         addTransition(ChangeTransform())
         addTransition(ChangeBounds())
         duration = 500
@@ -95,33 +94,34 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (!isEditTextOnTop)
+        if (!isSearchFieldOnTop)
             binding.viewRoot.gravity = Gravity.CENTER
+
+        val bgAnimator = createBgColorAnimator()
+
         binding.sampleListRoot.layoutTransition.enableTransitionType(LayoutTransition.CHANGE_APPEARING)
         binding.sampleListRoot.layoutTransition.enableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
 
-        progressBar = view.findViewById(R.id.progress_bar)
-
         binding.run {
             dnsPreviewList.adapter = DNSadapter
+            kaspiPreviewList.adapter = kaspiAdapter
             bvPreviewList.adapter = BVAdapter
-            mechtaPreviewList.adapter = mechtaAdapter
-            alserPreviewList.adapter = alserAdapter
         }
 
         binding.searchField.setOnTouchListener { view, motionEvent ->
-            if (motionEvent.action == MotionEvent.ACTION_DOWN && isEditTextOnTop == false) {
-                TransitionManager.beginDelayedTransition(binding.viewRoot, translateOnTop)
-                binding.sampleScrollView.visibility = View.VISIBLE
+            if (motionEvent.action == MotionEvent.ACTION_DOWN && isSearchFieldOnTop == false) {
+                bgAnimator.start()
+                TransitionManager.beginDelayedTransition(binding.viewRoot, translateOnTopSet)
+
                 binding.viewRoot.gravity = Gravity.TOP and Gravity.CENTER_HORIZONTAL
                 binding.searchField.scaleX = 1f
                 binding.searchField.scaleY = 1f
-                isEditTextOnTop = true
+
                 Handler(Looper.getMainLooper()).postDelayed({
                     TransitionManager.endTransitions(binding.viewRoot)
                     binding.sampleScrollView.visibility = View.VISIBLE
-                    isEditTextOnTop = true
-                }, 500)
+                    isSearchFieldOnTop = true
+                }, 1000)
                 false
             } else false
 
@@ -133,8 +133,22 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
             if (actionId == EditorInfo.IME_ACTION_GO && searchRequest != currentSearchRequest) {
                 currentSearchRequest = searchRequest
                 Log.d(TAG, "Enter pressed")
+
                 hideAll()
-                progressBar.visibility = View.VISIBLE
+
+                if (binding.dnsPreviewList.visibility != View.GONE) {
+                    clickOnShopPreview(Shop.DNS)
+                }
+                if (binding.bvPreviewList.visibility != View.GONE) {
+                    clickOnShopPreview(Shop.BELIY_VETER)
+                }
+
+                binding.progressAnim.visibility = View.VISIBLE
+                binding.progressAnim.setAnimation(R.raw.search_anim)
+                binding.progressAnim.playAnimation()
+
+                hideKeyboard(requireContext(), requireView())
+
                 presenter.getObservablePreviews(searchRequest)
                 true
             } else false
@@ -142,16 +156,20 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     }
 
     private fun setOnTouchListenerToView(
-        viewToSet: ViewGroup,
-        hiddenList: View,
-        spinnedView: ImageView
+        shop: Shop
     ) {
+        val viewToSet: View = when (shop) {
+            Shop.DNS -> binding.dnsShopArea
+            Shop.KASPI -> binding.kaspiShopArea
+            Shop.BELIY_VETER -> binding.bvShopArea
+            else -> error("Unknown shop name")
+        }
         viewToSet.setOnTouchListener(object : View.OnTouchListener {
             override fun onTouch(view: View?, event: MotionEvent?): Boolean {
                 when (event?.action) {
                     MotionEvent.ACTION_UP -> {
                         if (view != null) {
-                            onClick(hiddenList, view, spinnedView)
+                            clickOnShopPreview(shop)
                         }
                         view?.performClick()
                     }
@@ -164,9 +182,8 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
 
     override fun onNewSubscribe() {
         DNSadapter.clearElements()
+        kaspiAdapter.clearElements()
         BVAdapter.clearElements()
-        mechtaAdapter.clearElements()
-        alserAdapter.clearElements()
     }
 
     override fun addToList(sample: Sample) {
@@ -177,39 +194,30 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
                 if (binding.dnsShopArea.visibility == View.GONE) {
                     binding.run {
                         dnsShopArea.visibility = View.VISIBLE
-                        bvShopArea.visibility = View.VISIBLE
                         dnsPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(dnsShopArea, dnsPreviewList, dnsShopShow)
+                        setOnTouchListenerToView(Shop.DNS)
                     }
                 }
             }
             Shop.BELIY_VETER -> {
                 BVAdapter.addElement(sample)
+                Log.d(TAG, "adapter list size = ${BVAdapter.itemCount}")
                 if (binding.bvShopArea.visibility == View.GONE) {
                     binding.run {
                         bvShopArea.visibility = View.VISIBLE
                         bvPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(bvShopArea, bvPreviewList, bvShopShow)
+                        setOnTouchListenerToView(Shop.BELIY_VETER)
                     }
                 }
             }
-            Shop.MECHTA -> {
-                mechtaAdapter.addElement(sample)
-                if (binding.mechtaShopArea.visibility == View.GONE) {
+            Shop.KASPI -> {
+                kaspiAdapter.addElement(sample)
+                Log.d(TAG, "adapter list size = ${kaspiAdapter.itemCount}")
+                if (binding.kaspiShopArea.visibility == View.GONE) {
                     binding.run {
-                        mechtaShopArea.visibility = View.VISIBLE
-                        mechtaPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(mechtaShopArea, mechtaPreviewList, mechtaShopShow)
-                    }
-                }
-            }
-            Shop.ALSER -> {
-                alserAdapter.addElement(sample)
-                if (binding.alserShopArea.visibility == View.GONE) {
-                    binding.run {
-                        alserShopArea.visibility = View.VISIBLE
-                        alserPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(alserShopArea, alserPreviewList, alserShopShow)
+                        kaspiShopArea.visibility = View.VISIBLE
+                        kaspiPreviewList.visibility = View.VISIBLE
+                        setOnTouchListenerToView(Shop.KASPI)
                     }
                 }
             }
@@ -222,19 +230,58 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     }
 
     override fun onComplete() {
-        progressBar.visibility = View.GONE
+        binding.progressAnim.pauseAnimation()
+        binding.progressAnim.visibility = View.GONE
         if (DNSadapter.itemCount == 0
+            && kaspiAdapter.itemCount == 0
             && BVAdapter.itemCount == 0
-            && mechtaAdapter.itemCount == 0
-            && alserAdapter.itemCount == 0
         ) {
             hideAll()
-            binding.emptyResult.visibility = View.VISIBLE
+            binding.progressAnim.setAnimation(R.raw.not_found)
+            binding.progressAnim.visibility = View.VISIBLE
+            binding.progressAnim.playAnimation()
+            isResultEmpty = true
         }
     }
 
-    private fun onClick(productCard: View, touchedZone: View, spinnedView: View) {
-        Log.d("ADAPTER", "On click")
+    private fun createBgColorAnimator(): ValueAnimator {
+        val gradientBg = binding.viewRoot.background as GradientDrawable
+        val argbEvaluator = ArgbEvaluator()
+        val grayColor = requireActivity().resources.getColor(R.color.gray_light, null)
+        val redColor = requireActivity().resources.getColor(R.color.primary, null)
+        val roseColor = requireActivity().resources.getColor(R.color.primary_light, null)
+        return ValueAnimator.ofFloat(0.0f, 1.0f).apply {
+            interpolator = AccelerateInterpolator()
+            duration = 1000
+            addUpdateListener {
+                val startColor =
+                    argbEvaluator.evaluate(it.animatedFraction, redColor, grayColor) as Int
+                val endColor =
+                    argbEvaluator.evaluate(it.animatedFraction, roseColor, grayColor) as Int
+                gradientBg.colors = intArrayOf(startColor, endColor)
+            }
+        }
+    }
+
+
+    private fun clickOnShopPreview(shop: Shop) {
+        val productCard: View
+        val spinnedView: View
+        when (shop) {
+            Shop.DNS -> {
+                productCard = binding.dnsPreviewList
+                spinnedView = binding.dnsShopShow
+            }
+            Shop.BELIY_VETER -> {
+                productCard = binding.bvPreviewList
+                spinnedView = binding.bvShopShow
+            }
+            Shop.KASPI -> {
+                productCard = binding.kaspiPreviewList
+                spinnedView = binding.kaspiShopShow
+            }
+            else -> return
+        }
         if (productCard.visibility != View.VISIBLE) {
             Log.d("ADAPTER", "Gone")
             spinnedView
@@ -252,18 +299,7 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
                 duration = transitionDuration - 150
                 translationY(0f)
                 interpolator = LinearOutSlowInInterpolator()
-            }.setListener(object : Animator.AnimatorListener {
-                override fun onAnimationStart(p0: Animator?) {
-                    touchedZone.isEnabled = false
-                }
-
-                override fun onAnimationEnd(p0: Animator?) {
-                    touchedZone.isEnabled = true
-                }
-
-                override fun onAnimationCancel(p0: Animator?) {}
-                override fun onAnimationRepeat(p0: Animator?) {}
-            }).start()
+            }.start()
         } else {
             Log.d("ADAPTER", "Visble")
             spinnedView
@@ -274,7 +310,7 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
                 }
             productCard.animate().apply {
                 duration = transitionDuration
-                translationY(-productListTranslation)
+                this.translationY(-productListTranslation)
                 interpolator = AccelerateInterpolator()
             }.start()
             Handler(Looper.getMainLooper()).postDelayed(
@@ -287,15 +323,28 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     private fun hideAll() {
         val gone = View.GONE
         binding.run {
-            dnsShopArea.visibility = gone
-            dnsPreviewList.visibility = gone
-            bvShopArea.visibility = gone
-            bvPreviewList.visibility = gone
-            mechtaShopArea.visibility = gone
-            mechtaPreviewList.visibility = gone
-            alserShopArea.visibility = gone
-            alserPreviewList.visibility = gone
-            binding.emptyResult.visibility = gone
+            changeVisibilitySeveralViews(
+                gone,
+                dnsShopArea,
+                dnsPreviewList,
+                kaspiShopArea,
+                kaspiPreviewList,
+                bvShopArea,
+                bvPreviewList,
+                progressAnim
+            )
+        }
+    }
+
+    fun hideKeyboard(context: Context, view: View) {
+        val imm: InputMethodManager =
+            context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun changeVisibilitySeveralViews(visibility: Int, vararg views: View) {
+        for (view in views) {
+            view.visibility = visibility
         }
     }
 

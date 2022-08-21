@@ -1,5 +1,6 @@
 package com.bbj.technoreviews.view.presenter
 
+import android.content.Context
 import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
@@ -13,11 +14,13 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 @InjectViewState
 class SampleFragmentPresenter : MvpPresenter<SampleView>() {
 
-    val TAG = "PRESENTER"
+    private val TAG = "PRESENTER"
+
+    private val repository = ReviewsRepositoryImpl.getInstance()!!
 
     fun getObservablePreviews(searchRequest: String) {
         Log.d(TAG, "get observable preview $searchRequest")
-        ReviewsRepositoryImpl.getSampleList(searchRequest)
+        repository.getSampleList(searchRequest)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Sample> {

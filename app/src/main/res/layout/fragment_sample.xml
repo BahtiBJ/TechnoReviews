@@ -5,7 +5,7 @@
     android:id="@+id/viewRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray_light"
+    android:background="@drawable/gradient_bg"
     android:orientation="vertical">
 
     <EditText
@@ -73,6 +73,32 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/kaspi_shop_area"
+                style="@style/ShopNameArea">
+
+                <View style="@style/Divider" />
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="65dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@color/white"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/kaspi_logo" />
+
+                <ImageView
+                    android:id="@+id/kaspi_shop_show"
+                    style="@style/ArrowDownImage" />
+
+                <View style="@style/Divider" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/kaspi_preview_list"
+                style="@style/ProductList"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/sample_list_item" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/bv_shop_area"
@@ -96,83 +122,23 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/bv_preview_list"
-                style="@style/ProductList"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/sample_list_item" />
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:id="@+id/mechta_shop_area"
-                style="@style/ShopNameArea">
-
-                <View style="@style/Divider" />
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="35dp"
-                    android:layout_gravity="center_horizontal"
-                    android:background="@color/white"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/mechta_logo" />
-
-                <ImageView
-                    android:id="@+id/mechta_shop_show"
-                    style="@style/ArrowDownImage" />
-
-                <View style="@style/Divider" />
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/mechta_preview_list"
-                style="@style/ProductList"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/sample_list_item" />
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:id="@+id/alser_shop_area"
-                style="@style/ShopNameArea">
-
-                <View style="@style/Divider" />
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_gravity="center_horizontal"
-                    android:background="@color/white"
-                    android:src="@drawable/alser_logo" />
-
-                <ImageView
-                    android:id="@+id/alser_shop_show"
-                    style="@style/ArrowDownImage"/>
-
-                <View style="@style/Divider" />
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/alser_preview_list"
+                android:translationZ="-2dp"
                 style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
             <View style="@style/Divider" />
 
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                style="@style/Widget.AppCompat.ProgressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/progress_anim"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="25dp"
+                android:layout_marginBottom="25dp"
+                app:lottie_loop="true"
                 android:visibility="gone" />
 
-            <ImageView
-                android:id="@+id/emptyResult"
-                android:layout_width="300dp"
-                android:layout_height="300dp"
-                android:layout_gravity="center"
-                android:layout_marginTop="150dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/empty_result"
-                android:visibility="gone" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </ScrollView>
 </androidx.appcompat.widget.LinearLayoutCompat>

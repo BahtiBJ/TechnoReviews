@@ -6,7 +6,7 @@
         <item name="colorPrimaryVariant">@color/primary_light</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-<!--        <item name="android:background">@drawable/grdient_bg</item>-->
+        <item name="background">@color/primary</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <item name="android:fontFamily">@font/montserrat</item>

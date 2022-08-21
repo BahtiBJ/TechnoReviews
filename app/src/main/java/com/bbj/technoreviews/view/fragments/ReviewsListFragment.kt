@@ -4,10 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.bbj.technoreviews.R
@@ -22,10 +21,11 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     @InjectPresenter
     lateinit var presenter: ReviewFragmentPresenter
 
-    private var position : Int = 0
-    private lateinit var shopName : Shop
+    private var position: Int = 0
+    private lateinit var shopName: Shop
 
-    lateinit var progressBar: ProgressBar
+    lateinit var progressAnim: LottieAnimationView
+    lateinit var reviewList: RecyclerView
 
     val adapter: ReviewListAdapter by lazy { ReviewListAdapter(requireContext()) }
 
@@ -36,9 +36,8 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     ): View? {
         arguments?.let {
             position = it.getInt(SampleFragment.POSITION)
-           shopName = Shop.valueOf(it.getString(SampleFragment.SHOP) ?: "ALL")
+            shopName = Shop.valueOf(it.getString(SampleFragment.SHOP) ?: "ALL")
         }
-
         return inflater.inflate(R.layout.fragment_review, container, false)
     }
 
@@ -46,9 +45,12 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
         super.onViewCreated(view, savedInstanceState)
         presenter.getObservableReviews(position, shopName)
 
-        progressBar = view.findViewById(R.id.review_fragment_progress_bar)
-        progressBar.visibility = View.VISIBLE
-        val reviewList: RecyclerView = view.findViewById(R.id.review_list)
+        progressAnim = view.findViewById(R.id.result_anim)
+        progressAnim.visibility = View.VISIBLE
+        progressAnim.setAnimation(R.raw.search_anim)
+        progressAnim.playAnimation()
+
+        reviewList = view.findViewById(R.id.review_list)
         reviewList.adapter = adapter
     }
 
@@ -57,7 +59,8 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     }
 
     override fun addToList(review: Review) {
-            adapter.addElement(review)
+        reviewList.visibility = View.VISIBLE
+        adapter.addElement(review)
     }
 
     override fun showError(error: String) {
@@ -65,6 +68,12 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
     }
 
     override fun onComplete() {
-        progressBar.visibility = View.GONE
+        progressAnim.visibility = View.GONE
+        progressAnim.pauseAnimation()
+        if (adapter.itemCount == 0) {
+            progressAnim.visibility = View.VISIBLE
+            progressAnim.setAnimation(R.raw.not_found)
+            progressAnim.playAnimation()
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.bbj.technoreviews.view.presenter
 
+import android.content.Context
 import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
@@ -18,9 +19,11 @@ class ReviewFragmentPresenter : MvpPresenter<ReviewView>() {
 
     private val savedReviews = hashMapOf<Int,Review>()
 
+    private val repository = ReviewsRepositoryImpl.getInstance()!!
+
     fun getObservableReviews(position : Int,shopName : Shop) {
         Log.d(TAG, "get observable review")
-        ReviewsRepositoryImpl.getReviewList(position,shopName)
+        repository.getReviewList(position,shopName)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Review> {

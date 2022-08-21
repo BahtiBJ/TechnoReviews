@@ -4,31 +4,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
+    android:gravity="center"
     android:background="@color/yellow_light"
-    android:orientation="vertical">
+    android:animateLayoutChanges="true"
+    android:orientation="vertical"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
-    <FrameLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/review_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:visibility="gone"
+        tools:listitem="@layout/review_list_item" />
 
-        <ProgressBar
-            android:id="@+id/review_fragment_progress_bar"
-            style="@style/Widget.AppCompat.ProgressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="15dp"
-            android:visibility="invisible" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/review_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/review_list_item" />
-
-    </FrameLayout>
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/result_anim"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="25dp"
+        app:lottie_loop="true"
+        android:visibility="gone" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -1,5 +1,6 @@
 package com.bbj.technoreviews.data
 
+import android.content.Context
 import android.util.Log
 import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.data.models.Sample
@@ -9,7 +10,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class BVParser : Parser {
+class BVParser(context: Context) : Parser {
 
     private val TAG = "BVParser"
     private val baseUrl = "https://shop.kz/search/?q="
@@ -20,6 +21,7 @@ class BVParser : Parser {
     private var productList: Elements? = null
     private var currentSearchRequest = ""
 
+    private val jsPageAssistant = JSPageAssistant(context)
 
     override fun getSampleStream(
         searchRequest: String,
@@ -29,12 +31,19 @@ class BVParser : Parser {
             currentSearchRequest = searchRequest
             reviewMap.clear()
         }
+        var sample: Sample
         try {
-            productList = parseProductList(searchRequest)
-            Log.d(TAG, "get previews")
-            for (i in 0 until productList!!.size) {
-                sampleEmitter.onNext(getSample(productList!![i]))
+            jsPageAssistant.onReceive = { html ->
+                productList = parseProductList(html)
+                for (i in 0 until productList!!.size) {
+                    Log.d(TAG, "get previews")
+                    sample = getSample(productList!![i])
+                    Log.d(TAG, "get sample stream $sample")
+                    sampleEmitter.onNext(sample)
+                }
+                sampleEmitter.onComplete()
             }
+            jsPageAssistant.requestHTML(baseUrl + searchRequest.trim().replace(" ", "%20"))
         } catch (e: Exception) {
             sampleEmitter.onError(e)
         }
@@ -44,28 +53,22 @@ class BVParser : Parser {
         reviewMap.get(position)?.let { reviews ->
             for (review in reviews)
                 reviewListEmitter.onNext(review)
+            reviewListEmitter.onComplete()
             return
         }
         productList?.get(position)?.let {
             try {
-                reviewMap.put(position,getReviews(it, reviewListEmitter))
+                getReviews(position,it, reviewListEmitter)
             } catch (e: Exception) {
                 reviewListEmitter.onError(e)
             }
         }
     }
 
-    private fun parseProductList(searchRequest: String): Elements {
-        val document =
-            Jsoup.connect(baseUrl +
-                    searchRequest.apply {
-                        trim()
-                        replace(" ", "%20")
-                    })
-                .timeout(30000)
-                .get()
-        Log.d(TAG, "get result")
-        val parsedElements = document.select("div.multisearch-page__product gtm-impression-product")
+    private fun parseProductList(html: String): Elements {
+        val document = Jsoup.parse(html)
+        val parsedElements = document.select("div.multisearch-page__product__wrapper")
+        Log.d(TAG, "Parse product list size = ${parsedElements.size}")
         return parsedElements
 
     }
@@ -82,36 +85,53 @@ class BVParser : Parser {
 
 
     private fun getReviews(
+        position: Int,
         element: Element,
-        reviewListEmitter: ObservableEmitter<Review>
-    ) : ArrayList<Review> {
+        reviewListEmitter: ObservableEmitter<Review>) {
         val url = element.select("a[href]")
             .attr("abs:href")
         Log.d(TAG, "getReviewsFromCurrentSite $url")
-        val reviewList: ArrayList<Review> = arrayListOf()
-        val reviewDocument = Jsoup.connect("$url").get()
-        val reviewElements = reviewDocument.select("div.bx_review_item")
-        var starCount: Int
-        var reviewText: String
-        var review: Review
-        //.subList(1, reviewElements.size
-        for (reviewElement in reviewElements) {
-            reviewText = getText(reviewElement)
-            starCount = 5 -  element.select("a.fa fa-star-o").size
-            review = Review(starCount, reviewText)
-            reviewList.add(review)
-            reviewListEmitter.onNext(review)
+        jsPageAssistant.onReceive = {html ->
+            val reviewList: ArrayList<Review> = arrayListOf()
+            val reviewDocument = Jsoup.parse(html)
+            val reviewElements = reviewDocument.select("div.bx_review_item")
+            Log.d(TAG, "Review elements size = ${reviewElements.size} ")
+            var starCount: Int
+            var reviewText: String
+            var review: Review
+            for (reviewElement in reviewElements) {
+                reviewText = getText(reviewElement)
+                starCount = getStarCount(reviewElement)
+                review = Review(starCount, reviewText)
+                reviewList.add(review)
+                reviewListEmitter.onNext(review)
+            }
+            Log.d(TAG, "get Reviews = $reviewList ")
+            reviewMap.put(position, reviewList)
+            reviewListEmitter.onComplete()
         }
-        return reviewList
+        jsPageAssistant.requestHTML(url)
     }
 
-    private fun getText(element: Element) : String{
+    private fun getText(element: Element): String {
         val paragraphs = element.select("div.bx_review_text_i")
         var reviewText = ""
-        for (paragraph in paragraphs){
-            reviewText += paragraph.text() + "\n"
+        for (paragraph in paragraphs) {
+            reviewText += paragraph.text() + "\n\n"
         }
         return reviewText
+    }
+
+    private fun getStarCount(element: Element) : Int{
+        val title = element.select("div.col-md-3.bx_stars").attr("title")
+        return when (title){
+            "Отлично" -> 5
+            "Хорошо" -> 4
+            "Нормально" -> 3
+            "Плохо" -> 2
+            "Ужасно" -> 1
+            else -> 0
+        }
     }
 
 }
