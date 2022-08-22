@@ -97,6 +97,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/kaspi_preview_list"
                 style="@style/ProductList"
+                android:translationZ="-2dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />
 
@@ -122,7 +123,7 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/bv_preview_list"
-                android:translationZ="-2dp"
+                android:translationZ="-3dp"
                 style="@style/ProductList"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/sample_list_item" />

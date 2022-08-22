@@ -15,6 +15,7 @@ import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.view.adapter.ReviewListAdapter
 import com.bbj.technoreviews.view.presenter.ReviewFragmentPresenter
 import com.bbj.technoreviews.view.presenter.ReviewView
+import com.bbj.technoreviews.view.util.isOnline
 
 class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
 
@@ -43,7 +44,6 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        presenter.getObservableReviews(position, shopName)
 
         progressAnim = view.findViewById(R.id.result_anim)
         progressAnim.visibility = View.VISIBLE
@@ -52,6 +52,13 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
 
         reviewList = view.findViewById(R.id.review_list)
         reviewList.adapter = adapter
+
+        if (requireContext().isOnline()) {
+            presenter.getObservableReviews(position, shopName)
+        } else {
+            showError()
+        }
+
     }
 
     override fun onNewSubscribe() {
@@ -63,8 +70,11 @@ class ReviewsListFragment : MvpAppCompatFragment(), ReviewView {
         adapter.addElement(review)
     }
 
-    override fun showError(error: String) {
-        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+    override fun showError() {
+        Toast.makeText(requireContext()
+            , requireContext().resources.getText(R.string.error)
+            , Toast.LENGTH_LONG).show()
+        onComplete()
     }
 
     override fun onComplete() {

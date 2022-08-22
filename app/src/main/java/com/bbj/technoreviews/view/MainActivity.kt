@@ -8,6 +8,7 @@ import com.bbj.technoreviews.R
 import com.bbj.technoreviews.data.ReviewsRepositoryImpl
 import com.bbj.technoreviews.view.fragments.SampleFragment
 import com.bbj.technoreviews.view.fragments.ReviewsListFragment
+import io.reactivex.rxjava3.plugins.RxJavaPlugins
 
 
 class MainActivity : AppCompatActivity() {
@@ -15,7 +16,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ReviewsRepositoryImpl.getInstance(this)
+        RxJavaPlugins.setErrorHandler {}
         setContentView(R.layout.activity_main)
+
 
         supportFragmentManager.beginTransaction()
             .add(R.id.main_fragment_container, SampleFragment())

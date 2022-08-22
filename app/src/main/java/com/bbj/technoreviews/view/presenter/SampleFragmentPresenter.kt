@@ -19,7 +19,6 @@ class SampleFragmentPresenter : MvpPresenter<SampleView>() {
     private val repository = ReviewsRepositoryImpl.getInstance()!!
 
     fun getObservablePreviews(searchRequest: String) {
-        Log.d(TAG, "get observable preview $searchRequest")
         repository.getSampleList(searchRequest)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -33,7 +32,7 @@ class SampleFragmentPresenter : MvpPresenter<SampleView>() {
                 }
 
                 override fun onError(e: Throwable) {
-                    throw e
+                    viewState.showError()
                 }
 
                 override fun onComplete() {

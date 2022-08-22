@@ -13,9 +13,8 @@ interface SampleView : MvpView {
     fun addToList(sample : Sample)
 
     @StateStrategyType(SkipStrategy::class)
-    fun showError(error : String)
+    fun showError()
 
-    @StateStrategyType(SkipStrategy::class)
     fun onComplete()
 
 }

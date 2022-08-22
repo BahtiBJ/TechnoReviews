@@ -10,7 +10,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.*
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AnticipateOvershootInterpolator
@@ -18,7 +17,10 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import androidx.transition.*
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeTransform
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.arellomobile.mvp.presenter.PresenterType
@@ -30,16 +32,12 @@ import com.bbj.technoreviews.view.MainActivity
 import com.bbj.technoreviews.view.adapter.SampleListAdapter
 import com.bbj.technoreviews.view.presenter.SampleFragmentPresenter
 import com.bbj.technoreviews.view.presenter.SampleView
-
+import com.bbj.technoreviews.view.util.isOnline
 
 const val transitionDuration: Long = 500
 const val productListTranslation = 1900f
 
 class SampleFragment : MvpAppCompatFragment(), SampleView {
-
-    init {
-        Log.d("ISINITFRAG", "INIT PREVIEW")
-    }
 
     companion object {
         const val NAME_KEY = "NAME"
@@ -99,16 +97,19 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
 
         val bgAnimator = createBgColorAnimator()
 
-        binding.sampleListRoot.layoutTransition.enableTransitionType(LayoutTransition.CHANGE_APPEARING)
-        binding.sampleListRoot.layoutTransition.enableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
+        binding.sampleListRoot.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         binding.run {
             dnsPreviewList.adapter = DNSadapter
             kaspiPreviewList.adapter = kaspiAdapter
             bvPreviewList.adapter = BVAdapter
         }
+        setOnTouchListenerToView(Shop.DNS)
+        setOnTouchListenerToView(Shop.BELIY_VETER)
+        setOnTouchListenerToView(Shop.KASPI)
 
-        binding.searchField.setOnTouchListener { view, motionEvent ->
+
+        binding.searchField.setOnTouchListener { _, motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN && isSearchFieldOnTop == false) {
                 bgAnimator.start()
                 TransitionManager.beginDelayedTransition(binding.viewRoot, translateOnTopSet)
@@ -128,13 +129,9 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
         }
 
         binding.searchField.setOnEditorActionListener { v, actionId, keyEvent ->
-            Log.d(TAG, "Something pressed")
-            val searchRequest = v.text.toString()
+            val searchRequest = v.text.toString().trim()
             if (actionId == EditorInfo.IME_ACTION_GO && searchRequest != currentSearchRequest) {
                 currentSearchRequest = searchRequest
-                Log.d(TAG, "Enter pressed")
-
-                hideAll()
 
                 if (binding.dnsPreviewList.visibility != View.GONE) {
                     clickOnShopPreview(Shop.DNS)
@@ -142,14 +139,24 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
                 if (binding.bvPreviewList.visibility != View.GONE) {
                     clickOnShopPreview(Shop.BELIY_VETER)
                 }
+                if (binding.kaspiPreviewList.visibility != View.GONE) {
+                    clickOnShopPreview(Shop.KASPI)
+                }
+                hideKeyboard(requireContext(), requireView())
+
+                hideAll()
 
                 binding.progressAnim.visibility = View.VISIBLE
                 binding.progressAnim.setAnimation(R.raw.search_anim)
                 binding.progressAnim.playAnimation()
 
-                hideKeyboard(requireContext(), requireView())
 
-                presenter.getObservablePreviews(searchRequest)
+                if (requireContext().isOnline()) {
+                    presenter.getObservablePreviews(searchRequest)
+                } else {
+                    currentSearchRequest = "   "
+                    showError()
+                }
                 true
             } else false
         }
@@ -187,46 +194,37 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
     }
 
     override fun addToList(sample: Sample) {
-        Log.d(TAG, "Add to List")
         when (sample.shopName) {
             Shop.DNS -> {
                 DNSadapter.addElement(sample)
-                if (binding.dnsShopArea.visibility == View.GONE) {
-                    binding.run {
-                        dnsShopArea.visibility = View.VISIBLE
-                        dnsPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(Shop.DNS)
-                    }
+                binding.run {
+                    dnsShopArea.visibility = View.VISIBLE
+                    clickOnShopPreview(Shop.DNS)
                 }
             }
             Shop.BELIY_VETER -> {
                 BVAdapter.addElement(sample)
-                Log.d(TAG, "adapter list size = ${BVAdapter.itemCount}")
-                if (binding.bvShopArea.visibility == View.GONE) {
-                    binding.run {
-                        bvShopArea.visibility = View.VISIBLE
-                        bvPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(Shop.BELIY_VETER)
-                    }
+                binding.run {
+                    bvShopArea.visibility = View.VISIBLE
+                    clickOnShopPreview(Shop.BELIY_VETER)
                 }
             }
             Shop.KASPI -> {
                 kaspiAdapter.addElement(sample)
-                Log.d(TAG, "adapter list size = ${kaspiAdapter.itemCount}")
-                if (binding.kaspiShopArea.visibility == View.GONE) {
-                    binding.run {
-                        kaspiShopArea.visibility = View.VISIBLE
-                        kaspiPreviewList.visibility = View.VISIBLE
-                        setOnTouchListenerToView(Shop.KASPI)
-                    }
+                binding.run {
+                    kaspiShopArea.visibility = View.VISIBLE
+                    clickOnShopPreview(Shop.KASPI)
                 }
             }
             else -> error("Unknown shop name")
         }
     }
 
-    override fun showError(error: String) {
-        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+    override fun showError() {
+        Toast.makeText(
+            requireContext(), requireContext().resources.getText(R.string.error), Toast.LENGTH_LONG
+        ).show()
+        onComplete()
     }
 
     override fun onComplete() {
@@ -263,60 +261,51 @@ class SampleFragment : MvpAppCompatFragment(), SampleView {
         }
     }
 
-
     private fun clickOnShopPreview(shop: Shop) {
-        val productCard: View
+        val productList: View
         val spinnedView: View
         when (shop) {
             Shop.DNS -> {
-                productCard = binding.dnsPreviewList
+                productList = binding.dnsPreviewList
                 spinnedView = binding.dnsShopShow
             }
             Shop.BELIY_VETER -> {
-                productCard = binding.bvPreviewList
+                productList = binding.bvPreviewList
                 spinnedView = binding.bvShopShow
             }
             Shop.KASPI -> {
-                productCard = binding.kaspiPreviewList
+                productList = binding.kaspiPreviewList
                 spinnedView = binding.kaspiShopShow
             }
             else -> return
         }
-        if (productCard.visibility != View.VISIBLE) {
-            Log.d("ADAPTER", "Gone")
+        if (productList.visibility != View.VISIBLE) {
             spinnedView
-                .animate().rotationBy(180f).apply {
+                .animate().rotation(180f).apply {
                     duration = 300
                     interpolator = AccelerateInterpolator()
                     start()
                 }
-            productCard.translationY = -productListTranslation
-            Handler(Looper.getMainLooper()).postDelayed(
-                { productCard.visibility = View.VISIBLE },
-                150
-            )
-            productCard.animate().apply {
+            productList.translationY = -productListTranslation
+            productList.visibility = View.VISIBLE
+            productList.animate().apply {
                 duration = transitionDuration - 150
                 translationY(0f)
                 interpolator = LinearOutSlowInInterpolator()
             }.start()
         } else {
-            Log.d("ADAPTER", "Visble")
             spinnedView
-                .animate().rotationBy(180f).apply {
+                .animate().rotation(0f).apply {
                     duration = 300
                     interpolator = AccelerateInterpolator()
                     start()
                 }
-            productCard.animate().apply {
+            productList.animate().apply {
                 duration = transitionDuration
                 this.translationY(-productListTranslation)
+                productList.visibility = View.GONE
                 interpolator = AccelerateInterpolator()
             }.start()
-            Handler(Looper.getMainLooper()).postDelayed(
-                { productCard.visibility = View.GONE },
-                transitionDuration - 250
-            )
         }
     }
 

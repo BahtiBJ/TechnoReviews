@@ -12,7 +12,7 @@ interface ReviewView : MvpView {
     fun addToList(review : Review)
 
     @StateStrategyType(SkipStrategy::class)
-    fun showError(error : String)
+    fun showError()
 
     @StateStrategyType(SkipStrategy::class)
     fun onComplete()

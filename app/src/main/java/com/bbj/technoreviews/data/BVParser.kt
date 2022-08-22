@@ -1,7 +1,5 @@
 package com.bbj.technoreviews.data
 
-import android.content.Context
-import android.util.Log
 import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.data.models.Sample
 import com.bbj.technoreviews.domain.Parser
@@ -10,9 +8,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class BVParser(context: Context) : Parser {
+class BVParser(private val jsPageAssistant: JSPageAssistant) : Parser {
 
-    private val TAG = "BVParser"
     private val baseUrl = "https://shop.kz/search/?q="
 
     private lateinit var sample: Sample
@@ -20,8 +17,6 @@ class BVParser(context: Context) : Parser {
 
     private var productList: Elements? = null
     private var currentSearchRequest = ""
-
-    private val jsPageAssistant = JSPageAssistant(context)
 
     override fun getSampleStream(
         searchRequest: String,
@@ -36,9 +31,7 @@ class BVParser(context: Context) : Parser {
             jsPageAssistant.onReceive = { html ->
                 productList = parseProductList(html)
                 for (i in 0 until productList!!.size) {
-                    Log.d(TAG, "get previews")
                     sample = getSample(productList!![i])
-                    Log.d(TAG, "get sample stream $sample")
                     sampleEmitter.onNext(sample)
                 }
                 sampleEmitter.onComplete()
@@ -68,13 +61,11 @@ class BVParser(context: Context) : Parser {
     private fun parseProductList(html: String): Elements {
         val document = Jsoup.parse(html)
         val parsedElements = document.select("div.multisearch-page__product__wrapper")
-        Log.d(TAG, "Parse product list size = ${parsedElements.size}")
         return parsedElements
 
     }
 
     private fun getSample(element: Element): Sample {
-        Log.d(TAG, "get preview")
         val previewImage = element.getElementsByTag("img").attr("data-src")
         val productName =
             element.select("a[href]").text()
@@ -90,12 +81,10 @@ class BVParser(context: Context) : Parser {
         reviewListEmitter: ObservableEmitter<Review>) {
         val url = element.select("a[href]")
             .attr("abs:href")
-        Log.d(TAG, "getReviewsFromCurrentSite $url")
         jsPageAssistant.onReceive = {html ->
             val reviewList: ArrayList<Review> = arrayListOf()
             val reviewDocument = Jsoup.parse(html)
             val reviewElements = reviewDocument.select("div.bx_review_item")
-            Log.d(TAG, "Review elements size = ${reviewElements.size} ")
             var starCount: Int
             var reviewText: String
             var review: Review
@@ -106,7 +95,6 @@ class BVParser(context: Context) : Parser {
                 reviewList.add(review)
                 reviewListEmitter.onNext(review)
             }
-            Log.d(TAG, "get Reviews = $reviewList ")
             reviewMap.put(position, reviewList)
             reviewListEmitter.onComplete()
         }
@@ -116,8 +104,9 @@ class BVParser(context: Context) : Parser {
     private fun getText(element: Element): String {
         val paragraphs = element.select("div.bx_review_text_i")
         var reviewText = ""
-        for (paragraph in paragraphs) {
-            reviewText += paragraph.text() + "\n\n"
+        for (i in 0 until paragraphs.size) {
+            reviewText += paragraphs[i].text() +
+                    if (i != paragraphs.size - 1) "\n\n" else ""
         }
         return reviewText
     }

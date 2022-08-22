@@ -22,7 +22,6 @@ class ReviewFragmentPresenter : MvpPresenter<ReviewView>() {
     private val repository = ReviewsRepositoryImpl.getInstance()!!
 
     fun getObservableReviews(position : Int,shopName : Shop) {
-        Log.d(TAG, "get observable review")
         repository.getReviewList(position,shopName)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -37,9 +36,7 @@ class ReviewFragmentPresenter : MvpPresenter<ReviewView>() {
                 }
 
                 override fun onError(e: Throwable) {
-                    viewState.showError(e.localizedMessage!!)
-                    throw e
-
+                    viewState.showError()
                 }
 
                 override fun onComplete() {

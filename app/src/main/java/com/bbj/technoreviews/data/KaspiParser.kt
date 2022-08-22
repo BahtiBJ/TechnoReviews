@@ -1,6 +1,5 @@
 package com.bbj.technoreviews.data
 
-import android.util.Log
 import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.data.models.Sample
 import com.bbj.technoreviews.domain.Parser
@@ -9,10 +8,10 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class KaspiParser : Parser {
+class KaspiParser(private val jsPageAssistant: JSPageAssistant) : Parser {
 
-    private val TAG = "KaspiParser"
     private val baseUrl = "https://kaspi.kz/shop/search/?text="
+
 
     private val reviewMap = hashMapOf<Int, ArrayList<Review>>()
 
@@ -30,15 +29,12 @@ class KaspiParser : Parser {
         }
         try {
             productList = parseProductList(searchRequest)
-            Log.d(TAG, "get previews productList size = ${productList!!.size}")
             for (i in 0 until productList!!.size) {
                 getSample(productList!![i]).let {
-                    Log.d(TAG,"Sample = $it")
                     sampleEmitter.onNext(it)
                 }
             }
         } catch (e: Exception) {
-            Log.d(TAG,"On sample error")
             sampleEmitter.onError(e)
         }
     }
@@ -50,13 +46,18 @@ class KaspiParser : Parser {
             reviewListEmitter.onComplete()
             return
         }
+
         productList?.get(position)?.let {
             try {
-                reviewMap.put(position, getReviews(it, reviewListEmitter))
+                val url = it.select("a[href]")
+                    .attr("abs:href")
+                jsPageAssistant.onReceive = {html ->
+                    getReviews(position,html, reviewListEmitter)
+                }
+                jsPageAssistant.requestHTML(url)
             } catch (e: Exception) {
                 reviewListEmitter.onError(e)
             }
-            reviewListEmitter.onComplete()
         }
     }
 
@@ -69,7 +70,6 @@ class KaspiParser : Parser {
                             .replace(" ", "%20")
             )
                 .get()
-        Log.d(TAG, "get result")
         val parsedElements = document.select("div[data-product-id]")
         val result = Elements()
         for (element in parsedElements) {
@@ -91,7 +91,6 @@ class KaspiParser : Parser {
                         return false
                 }
         } catch (e: Exception) {
-            Log.d(TAG, "ClassCastException")
             return false
         }
         return true
@@ -99,7 +98,6 @@ class KaspiParser : Parser {
 
 
     private fun getSample(element: Element): Sample {
-        Log.d(TAG, "get preview")
         val previewImage = element.select("img.item-card__image").attr("src")
         val productName =
             element.select("a[title]").attr("title")
@@ -116,7 +114,6 @@ class KaspiParser : Parser {
                     .filter { it.isDigit() }
                     .toFloat()/2
             } catch (e: Exception) {
-                Log.d(TAG, "ClassCastException")
                 0.0.toFloat()
             }
         return Sample(Shop.KASPI, previewImage, productName, rating, reviewCount)
@@ -124,24 +121,19 @@ class KaspiParser : Parser {
 
 
     private fun getReviews(
-        element: Element,
+        position: Int,
+        html : String,
         reviewListEmitter: ObservableEmitter<Review>
-    ): ArrayList<Review> {
-        val url = element.select("a[href]")
-            .attr("abs:href")
-        Log.d(TAG, "getReviewsFromCurrentSite $url")
+    ) {
         val reviewList: ArrayList<Review> = arrayListOf()
-        val reviewDocument = Jsoup.connect("$url").get()
-        val reviewElements = reviewDocument.select("div.reviews__review")
+        val reviewDocument = Jsoup.parse(html)
+        val reviewElements = reviewDocument.select("a.reviews__review.g-bb-thin")
         if (reviewElements.size != 0) {
             var starCount: Int
             var reviewText: String
             var review: Review
             for (reviewElement in reviewElements.subList(1, reviewElements.size)) {
-                reviewText = reviewElement.select("div.reviews__review-text").text()
-                    .replace("Недостатки", "\n\nНедостатки")
-                    .replace("Комментарии", "\n\nКомментарий")
-
+                reviewText = getText(reviewElement.select("p.reviews__review-text_paragraph"))
                 starCount = reviewElement
                     .select("div.rating")
                     .attr("class")
@@ -151,7 +143,17 @@ class KaspiParser : Parser {
                 reviewList.add(review)
                 reviewListEmitter.onNext(review)
             }
+            reviewMap.put(position,reviewList)
         }
-        return reviewList
+        reviewListEmitter.onComplete()
+    }
+
+    private fun getText(elements: Elements) : String{
+        var reviewText = ""
+        for (i in 0 until elements.size){
+            reviewText += elements[i].text() +
+                    if (i != elements.size - 1) "\n\n" else ""
+        }
+        return reviewText
     }
 }

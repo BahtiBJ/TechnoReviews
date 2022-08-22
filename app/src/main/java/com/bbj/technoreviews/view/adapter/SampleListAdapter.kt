@@ -74,7 +74,7 @@ class SampleListAdapter(context: Context, val onProductClick: OnProductClick) :
 
                 if (item.previewImageUrl.isEmpty()) {
                     Picasso.get()
-                        .load(R.drawable.place_holder)
+                        .load(R.drawable.product)
                         .placeholder(R.drawable.place_holder)
                         .fit()
                         .into(productImage)

@@ -1,6 +1,5 @@
 package com.bbj.technoreviews.data
 
-import android.util.Log
 import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.data.models.Sample
 import com.bbj.technoreviews.domain.Parser
@@ -31,7 +30,6 @@ class DNSParser : Parser {
         }
         try {
             productList = parseProductList(searchRequest)
-            Log.d(TAG, "get previews")
             for (i in 0 until productList!!.size) {
                 sampleEmitter.onNext(getSample(productList!![i]))
             }
@@ -65,9 +63,7 @@ class DNSParser : Parser {
                             .trim()
                             .replace(" ", "+")
             )
-//              .timeout(30000)
                 .get()
-        Log.d(TAG, "get result")
         val parsedElements = document.select("div[data-id=\"product\"]")
         val result = Elements()
         for (element in parsedElements) {
@@ -87,7 +83,6 @@ class DNSParser : Parser {
                         return false
                 }
         } catch (e: Exception) {
-            Log.d(TAG, "ClassCastException")
             return false
         }
         return true
@@ -95,7 +90,6 @@ class DNSParser : Parser {
 
 
     private fun getSample(element: Element): Sample {
-        Log.d(TAG, "get preview")
         val previewImage = element.getElementsByTag("img").attr("data-src")
         val productName =
             element.select("a.catalog-product__name").text()
@@ -105,7 +99,6 @@ class DNSParser : Parser {
             try {
                 ratingElement.attr("data-rating").toFloat()
             } catch (e: Exception) {
-                Log.d(TAG, "ClassCastException")
                 0.0.toFloat()
             }
         return Sample(Shop.DNS, previewImage, productName, rating, reviewCount)
@@ -118,7 +111,6 @@ class DNSParser : Parser {
     ): ArrayList<Review> {
         val url = element.select("a[href]")
             .attr("abs:href")
-        Log.d(TAG, "getReviewsFromCurrentSite $url")
         val reviewList: ArrayList<Review> = arrayListOf()
         val reviewDocument = Jsoup.connect("$url/opinion/").get()
         val reviewElements = reviewDocument.select("div.ow-opinion.ow-opinions__item")
@@ -127,8 +119,8 @@ class DNSParser : Parser {
         var review: Review
         for (reviewElement in reviewElements.subList(1, reviewElements.size)) {
             reviewText = reviewElement.select("div.ow-opinion__texts").text()
-                .replace("Недостатки", "\n\nНедостатки")
-                .replace("Комментарии", "\n\nКомментарий")
+                .replace("\\WНедостатки".toRegex(), "\n\nНедостатки")
+                .replace("\\WКомментари\\w".toRegex(), "\n\nКомментарий")
 
             starCount = getStarCount(reviewElement)
             review = Review(starCount, reviewText)
@@ -145,11 +137,9 @@ class DNSParser : Parser {
         for (star in stars) {
             count++
             val state = star.attr("data-state").toString()
-            Log.d(TAG, "star state = ${state} stars size = ${stars.size}")
             if (state.contains("s"))
                 starCount++
             if (count >= 5) {
-                Log.d(TAG, "Star count = $starCount")
                 return starCount
             }
         }

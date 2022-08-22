@@ -1,6 +1,8 @@
 package com.bbj.technoreviews.data
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.bbj.technoreviews.data.models.Sample
 import com.bbj.technoreviews.data.models.Review
 import com.bbj.technoreviews.domain.ReviewsRepository
@@ -23,16 +25,25 @@ class ReviewsRepositoryImpl(context : Context) : ReviewsRepository {
         }
     }
 
+    private val jsPageAssistant = JSPageAssistant(context)
+
     private val dnsParser = DNSParser()
-    private val kaspiParser = KaspiParser()
-    private val bvParser = BVParser(context)
+    private val kaspiParser = KaspiParser(jsPageAssistant)
+    private val bvParser = BVParser(jsPageAssistant)
 
     override fun getSampleList(searchRequest : String): Observable<Sample> {
         return Observable.create(object : ObservableOnSubscribe<Sample> {
             override fun subscribe(emitter: ObservableEmitter<Sample>) {
-                dnsParser.getSampleStream(searchRequest,emitter)
-                kaspiParser.getSampleStream(searchRequest,emitter)
-                bvParser.getSampleStream(searchRequest,emitter)
+                try {
+                    dnsParser.getSampleStream(searchRequest, emitter)
+                    kaspiParser.getSampleStream(searchRequest, emitter)
+                    bvParser.getSampleStream(searchRequest, emitter)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        emitter.onComplete()
+                    }, 25000)
+                } catch (e : java.lang.Exception){
+                    emitter.onError(e)
+                }
             }
         })
     }
@@ -40,22 +51,25 @@ class ReviewsRepositoryImpl(context : Context) : ReviewsRepository {
     override fun getReviewList(position : Int, shopName : Shop): Observable<Review> {
         return Observable.create(object : ObservableOnSubscribe<Review> {
             override fun subscribe(emitter: ObservableEmitter<Review>) {
-                when (shopName){
-                    Shop.DNS -> {
-                        dnsParser.getReviewStream(position, emitter)
-                        emitter.onComplete()
+                try {
+                    when (shopName) {
+                        Shop.DNS -> {
+                            dnsParser.getReviewStream(position, emitter)
+                        }
+                        Shop.BELIY_VETER -> {
+                            bvParser.getReviewStream(position, emitter)
+                        }
+                        Shop.KASPI -> {
+                            kaspiParser.getReviewStream(position, emitter)
+                        }
+                        else -> throw Exception("Unknown shop name")
                     }
-                    Shop.BELIY_VETER -> {
-                        bvParser.getReviewStream(position, emitter)
+                    Handler(Looper.getMainLooper()).postDelayed({
                         emitter.onComplete()
-                    }
-                    Shop.KASPI -> {
-                        kaspiParser.getReviewStream(position,emitter)
-                        emitter.onComplete()
-                    }
-                    else -> throw Exception("Unknown shop name")
+                    }, 20000)
+                } catch (e : java.lang.Exception){
+                    emitter.onError(e)
                 }
-
             }
         })
     }
